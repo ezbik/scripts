@@ -31,7 +31,7 @@ fi
 case $CODE in
 0)	TXT="OK $TXT" ;;
 1)	TXT="WARNING $TXT" ;;
-2)	TXT="CRITICAL$TXT" ;;
+2)	TXT="CRITICAL $TXT" ;;
 esac
 
 echo "BACKUPNINJA $TXT"
