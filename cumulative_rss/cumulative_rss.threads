@@ -1,0 +1,257 @@
+#!/usr/bin/perl
+
+# process only pages since N days ago 
+$days=3;
+# locattion of the file with RSS URL-s.
+$rss_file="/etc/rss";
+# where to save cumulated RSS feed
+$out_rss="/var/www/odesk.rss";
+
+# good & bad keywords
+@keywords=(
+"apache",
+"aws",
+"awstats",
+"bash",
+"centos",
+"cpanel",
+"debian",
+"dhcp",
+"dns",
+"dkim",
+"dovecot",
+"ec2",
+"exim",
+"ffmpeg",
+"freebsd",
+"freeradius",
+"gentoo",
+"hostgator",
+"interspire",
+"iptables",
+"lighttpd",
+"linode",
+"linux",
+"lvm",
+"mail server",
+"mikrotik",
+"nagios",
+"nginx",
+"openvpn",
+"openvz",
+"plesk",
+"postfix",
+"powerdns",
+"pptp",
+"puppet",
+"rackspace",
+"radius",
+"rhel",
+"rrd",
+"shell",
+"spf",
+"squid",
+"svn",
+"ubuntu",
+"unix",
+"whm",
+"Virtualmin",
+);
+
+
+@bad_keywords=(
+"asp.net",
+"asterisk",
+"Android",
+"REST API",
+"MSSQL",
+"azure",
+"Cisco",
+"CSS",
+"Eclipse",
+"exchange 2010",
+"ExtJS",
+"Facebook",
+"Full time",
+"HTML/CSS",
+"IIS",
+"iOS",
+"Javascript",
+"JIRA",
+"Jquery",
+"ldap",
+"sugarcrm",
+"MCSE",
+"microsoft",
+"Objective",
+"PowerMTA",
+"python",
+"RESTful",
+"seo",
+"solaris",
+"teamviewer",
+"voip",
+"windows",
+);
+
+
+
+########
+
+$keyword_regex=join('|',@keywords);
+$bad_keyword_regex=join('|',@bad_keywords);
+
+use  XML::FeedPP;
+use DateTime::Format::W3CDTF;
+use DateTime;
+use File::Temp;
+
+my $w3c = DateTime::Format::W3CDTF->new;
+
+open IN, "<$rss_file";
+while (<IN>)
+{
+chomp;
+if ((!/^#/) and (!/^\s*$/)) {push @sources, $_}
+}
+close IN;
+
+#print join "\n",@sources; exit;
+
+
+my $feed = XML::FeedPP::RSS->new();
+my $feed2 = XML::FeedPP::RSS->new();
+$feed2->title( "cumulative_rss" );
+$feed2->description( "RSS"  );
+
+@a=shuffled(@sources);
+#######threads!
+
+use threads;
+use threads::shared;
+
+$n_of_threads=3;
+
+for(0..$n_of_threads-1) {
+
+#print ";starting thread $_\n";
+($trl[$_]) = threads->create(\&gogo, $_);
+}
+
+for(@trl)
+{
+#print "; lets try to stop ".$_->tid()."\n"; 
+push (@files , $_-> join() );
+}
+
+print "All threads are stopped\n";
+@a=();
+
+
+my $feed = XML::FeedPP::RSS->new();
+
+foreach $source (@files)
+{
+$feed -> merge ( $source );
+print "=merged $source\n";
+unlink $source;
+}
+
+$feed->uniq_item();
+
+
+my $dt0 = DateTime->now();
+$dt0->subtract( days=>$days );
+
+
+foreach my $item ( $feed->get_item() ) {
+	#print "URL: ", $item->link(), "\n";
+	#print "description: ", $item->description(), "\n";
+
+	my $dt = $w3c->parse_datetime( $item->pubDate() );
+	my $cmp=DateTime->compare( $dt0, $dt );
+	if ( $cmp == -1) 
+		{
+		print  $item->pubDate(), "\t", $item->title(), "\n";
+		$item2=$item;
+		$desc=$item2->description( );
+
+		my $counter = 100;
+		$counter++ while ($desc =~ m/($keyword_regex)/gmi);
+		$counter-- while ($desc =~ m/($bad_keyword_regex)/gmi);
+
+		$title=$item2->title();
+		$item2->title( '['.sprintf("%03.0f",$counter)."] ".$title );
+	 	$feed2->add_item( $item2 ); 
+		}
+
+}
+
+#$feed2->to_file( "/var/www/odesk.rss-dev" );
+
+$str=$feed2->to_string();
+$str=~s@rss version="2.0"@rss xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"@m;
+#highlight
+$str=~s/($keyword_regex)/&lt;font color=magenta&gt;$1&lt;\/font&gt;/gim;
+$str=~s/($bad_keyword_regex)/&lt;font color=gray&gt;$1&lt;\/font&gt;/gim;
+open OUT, ">$out_rss";
+print OUT $str;
+close OUT;
+
+####################################
+sub gogo {
+
+my $threadN=shift;
+
+my $piece=1+int(scalar @a/$n_of_threads);
+my $beg=($threadN)*$piece;
+my $end=($threadN+1)*$piece-1;
+my $email;
+my @files;
+
+if ($end>scalar @a) { $end=scalar @a-1}
+print "I am T$threadN; I will process elemens from $beg to $end\n";
+
+my $i;
+foreach $i  ($beg..$end)
+{
+        {
+        my $source=$a[$i];
+        chomp $source;
+        my $tmp=mktemp("/tmp/rss.XXXXXXXXX");
+        print "T$threadN; processing $i, $source to $tmp\n";
+        my $feed = XML::FeedPP::RSS->new($source);
+        $feed->to_file($tmp);
+        push(@files,$tmp);
+        }
+}
+
+return @files;
+
+
+}
+
+###############
+
+
+sub shuffled {
+  my @ordered = @_;
+  my @shuffled = ();
+  while (@ordered) {
+    my $i = int(rand() * @ordered);
+    push @shuffled, $ordered[$i];
+    splice(@ordered, $i, 1);
+  }
+  return @shuffled;
+}
+
+#
+#       Here is little advice how to run this script by cron.
+#       The 1st portion xargs/wget is required to 'warm up' URLs . Without this Freelancer.com 
+#       will be timed out :(
+#
+#MAILTO=""
+#PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
+#
+#*/20 * * * *    cat /etc/rss | xargs -n1 -P16 wget -O /dev/null -nv  >/dev/null 2>/dev/null ; cumulative_rss 
+#
