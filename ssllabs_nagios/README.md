@@ -8,15 +8,15 @@ The script is to
 Installation
 
 
+Prepare `/etc/ssl_domains.txt`
+
 ```
 #crontab:
-
 0 */4 * * *     root    /usr/local/bin/ssllabs-scan.check scan
 ```
 
 
 ```
 #nagios nrpe:
-
 command[check_ssllabs]=/usr/local/bin/ssllabs-scan.check check
 ```
