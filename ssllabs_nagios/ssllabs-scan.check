@@ -13,7 +13,8 @@ for DOMAIN in $( cat  /etc/ssl_domains.txt | grep -Ev '(^$|^#)' )
 do
         echo ==$DOMAIN
         timeout 300 \
-            ssllabs-scan -usecache  -maxage 1 -quiet -hostcheck  -verbosity error $DOMAIN > $MYROOT/$DOMAIN.raw
+            ssllabs-scan -usecache  -maxage 1 -quiet -hostcheck  -verbosity error $DOMAIN > $MYROOT/$DOMAIN.raw.tmp
+        mv  $MYROOT/$DOMAIN.raw.tmp $MYROOT/$DOMAIN.raw
         get_grade $MYROOT/$DOMAIN.raw 
 done
 
@@ -31,9 +32,10 @@ STATUS=0
 
 for DOMAIN in $( cat  /etc/ssl_domains.txt | grep -Ev '(^$|^#)' )
 do
-    if find $MYROOT/$DOMAIN.raw -cmin -14400 2>/dev/null | grep -q . 
+    if find $MYROOT/$DOMAIN.raw -cmin -720 2>/dev/null | grep -q . 
     then    GRADE=$( get_grade $MYROOT/$DOMAIN.raw ) 
-            TXT+=" $DOMAIN $GRADE;"
+            HOURS=$(((`date +%s`-`stat -c %Y $MYROOT/$DOMAIN.raw`)/3600 )) ; 
+            TXT+=" $DOMAIN grade $GRADE, checked $HOURS h ago;"
             echo "$GRADE" | grep -q -e "^A" || STATUS=1
     else    TXT+=" $DOMAIN not found or old status;"
             STATUS=1
