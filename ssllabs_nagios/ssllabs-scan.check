@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 DOMAINS=/etc/ssl_domains.txt
 MYROOT=/var/lib/ssllabs
 
