@@ -23,7 +23,7 @@ done
 ####################
 
 function get_grade () {
-    cat $1 2>/dev/null | grep '"grade"' | cut -d: -f2 | cut -d\" -f2 
+    cat $1 2>/dev/null | grep '"grade"' | cut -d: -f2 | cut -d\" -f2 | head -n1
 }
 
 ####################
