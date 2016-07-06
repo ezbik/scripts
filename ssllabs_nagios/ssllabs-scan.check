@@ -5,7 +5,7 @@ export DOMAINS=/etc/ssl_domains.txt
 export MYROOT=/var/lib/ssllabs
 mkdir -p $MYROOT
 
-which ssllabs-scan >/dev/null || { echo download ssllabs-scan ; exit ; }
+which ssllabs-scan >/dev/null || { echo download ssllabs-scan ; exit 2 ; }
 
 #function scan() {
 #
