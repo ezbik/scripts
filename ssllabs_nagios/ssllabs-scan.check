@@ -1,30 +1,62 @@
 #!/bin/bash
 
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-DOMAINS=/etc/ssl_domains.txt
-MYROOT=/var/lib/ssllabs
+export DOMAINS=/etc/ssl_domains.txt
+export MYROOT=/var/lib/ssllabs
+mkdir -p $MYROOT
 
 which ssllabs-scan >/dev/null || { echo download ssllabs-scan ; exit ; }
 
-function scan() {
+#function scan() {
+#
+#for DOMAIN in $( cat  /etc/ssl_domains.txt | grep -Ev '(^$|^#)' )
+#do
+#        echo ==$DOMAIN
+#        timeout 300 \
+#            ssllabs-scan -usecache  -maxage 1 -quiet -hostcheck  -verbosity error $DOMAIN > $MYROOT/$DOMAIN.raw.tmp
+#        mv  $MYROOT/$DOMAIN.raw.tmp $MYROOT/$DOMAIN.raw
+#        get_grade $MYROOT/$DOMAIN.raw 
+#done
+#
+#}
 
-mkdir -p $MYROOT
+function scan_parallel() {
 
-for DOMAIN in $( cat  /etc/ssl_domains.txt | grep -Ev '(^$|^#)' )
-do
-        echo ==$DOMAIN
-        timeout 300 \
-            ssllabs-scan -usecache  -maxage 1 -quiet -hostcheck  -verbosity error $DOMAIN > $MYROOT/$DOMAIN.raw.tmp
-        mv  $MYROOT/$DOMAIN.raw.tmp $MYROOT/$DOMAIN.raw
-        get_grade $MYROOT/$DOMAIN.raw 
-done
+cat  /etc/ssl_domains.txt | grep -Ev '(^$|^#)' | xargs -P10 -n1 -ID -- bash -c "scan_domain D" 
 
 }
+
+function scan_domain() {
+
+local DOMAIN=$1
+local GRADE
+local SCANCMD="timeout 300 ssllabs-scan -usecache  -maxage 1 -quiet -hostcheck  -verbosity error $DOMAIN"
+
+        echo ==start scan $DOMAIN
+
+        $SCANCMD > $MYROOT/$DOMAIN.raw.tmp
+
+        if [ -s $MYROOT/$DOMAIN.raw.tmp ]
+        then    :
+        else    echo "== $DOMAIN scan failed; 2nd attempt;"
+                $SCANCMD > $MYROOT/$DOMAIN.raw.tmp
+        fi
+        
+        mv  $MYROOT/$DOMAIN.raw.tmp $MYROOT/$DOMAIN.raw
+        GRADE=$( get_grade $MYROOT/$DOMAIN.raw )
+        echo ==end scan $DOMAIN grade $GRADE
+}
+
+export -f scan_domain
+
 ####################
 
 function get_grade () {
-    cat $1 2>/dev/null | grep '"grade"' | cut -d: -f2 | cut -d\" -f2 | head -n1
+        local GRADE=$(    cat $1 2>/dev/null | grep '"grade"' | cut -d: -f2 | cut -d\" -f2 | head -n1 )
+        test -n "$GRADE" && echo $GRADE || echo NULL
 }
+
+export -f get_grade
 
 ####################
 function check() {
@@ -49,8 +81,8 @@ exit $STATUS
 
 ################# 
 
-if      [ "scan"  == "$1" ] ; then $1
-elif    [ "check" == "$1" ] ; then $1
+if      [ "scan"  == "$1" ] ; then scan_parallel
+elif    [ "check" == "$1" ] ; then check
 else    echo "use scan or check"
 fi
 
