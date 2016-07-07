@@ -3,6 +3,7 @@
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 export DOMAINS=/etc/ssl_domains.txt
 export MYROOT=/var/lib/ssllabs
+export PARALLEL=10
 mkdir -p $MYROOT
 
 which ssllabs-scan >/dev/null || { echo download ssllabs-scan ; exit 2 ; }
@@ -22,28 +23,31 @@ which ssllabs-scan >/dev/null || { echo download ssllabs-scan ; exit 2 ; }
 
 function scan_parallel() {
 
-cat  /etc/ssl_domains.txt | grep -Ev '(^$|^#)' | xargs -P10 -n1 -ID -- bash -c "scan_domain D" 
+cat  /etc/ssl_domains.txt | grep -Ev '(^$|^#)' | xargs -P$PARALLEL -n1 -ID -- bash -c "scan_domain D" 
 
 }
 
 function scan_domain() {
 
 local DOMAIN=$1
-local GRADE
+local GRADE=""
 local SCANCMD="timeout 300 ssllabs-scan -usecache  -maxage 1 -quiet -hostcheck  -verbosity error $DOMAIN"
+# no cache:
+local SCANCMD2="timeout 300 ssllabs-scan                     -quiet -hostcheck  -verbosity error $DOMAIN"
 
-        echo ==start scan $DOMAIN
+        echo "==start scan $DOMAIN : $SCANCMD : $MYROOT/$DOMAIN.raw.tmp "
 
         $SCANCMD > $MYROOT/$DOMAIN.raw.tmp
+        GRADE=$( get_grade $MYROOT/$DOMAIN.raw.tmp )
 
-        if [ -s $MYROOT/$DOMAIN.raw.tmp ]
-        then    :
-        else    echo "== $DOMAIN scan failed; 2nd attempt;"
-                $SCANCMD > $MYROOT/$DOMAIN.raw.tmp
+        if [ "$GRADE" == NULL ]
+        then    echo "== $DOMAIN scan failed; got $GRADE ; 2nd attempt; $SCANCMD2"
+                $SCANCMD2 > $MYROOT/$DOMAIN.raw.tmp
+                GRADE=$( get_grade $MYROOT/$DOMAIN.raw.tmp )
+                echo "==$DOMAIN got $GRADE on 2nd scan" 
         fi
         
         mv  $MYROOT/$DOMAIN.raw.tmp $MYROOT/$DOMAIN.raw
-        GRADE=$( get_grade $MYROOT/$DOMAIN.raw )
         echo ==end scan $DOMAIN grade $GRADE
 }
 
@@ -52,8 +56,9 @@ export -f scan_domain
 ####################
 
 function get_grade () {
-        local GRADE=$(    cat $1 2>/dev/null | grep '"grade"' | cut -d: -f2 | cut -d\" -f2 | head -n1 )
-        test -n "$GRADE" && echo $GRADE || echo NULL
+        local RAW=$1
+        local LGRADE=$(    cat $RAW 2>/dev/null | grep '"grade"' | cut -d: -f2 | cut -d\" -f2 | head -n1 )
+        test -n "$LGRADE" && echo $LGRADE || echo NULL
 }
 
 export -f get_grade
