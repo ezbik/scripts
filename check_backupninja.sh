@@ -7,7 +7,13 @@
 LOG=/var/log/backupninja.log
 CODE=0
 
-if ! test -f $LOG 
+if test -d /etc/backup.d/ && ! ls /etc/backup.d/ &>/dev/null
+then    TXT="unable to read conf dir"
+        CODE=2
+elif ! find /etc/backup.d/*dup 2>/dev/null | grep -q .
+then    TXT="no conf found"
+        CODE=0
+elif ! test -f $LOG 
 then	TXT="$LOG doesnt exist"
 	CODE=1
 elif  [ "`stat -c %Y $LOG`" -lt "`date +%s -d -1day-12hour`" ]
