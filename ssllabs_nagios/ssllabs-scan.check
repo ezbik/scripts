@@ -15,13 +15,14 @@ do
         echo ==$DOMAIN
 
         local GRADE=$(get_grade $MYROOT/$DOMAIN.raw)
-        if echo ${BASH_ARGV[*]}  | grep -P "failed_grades" -q && [ "$GRADE" != "A" ]
+        if echo ${BASH_ARGV[*]}  | grep -P "failed_grades" -q && [ "$GRADE" == "A" ]
         then
+            echo "skip because grade is $GRADE"
+        else  
             timeout 300 \
                 ssllabs-scan -usecache  -maxage 1 -quiet -hostcheck  -verbosity error $DOMAIN > $MYROOT/$DOMAIN.raw.tmp
             mv  $MYROOT/$DOMAIN.raw.tmp $MYROOT/$DOMAIN.raw
             get_grade $MYROOT/$DOMAIN.raw 
-        else    echo "skip because grade is $GRADE"
         fi
 done
 
