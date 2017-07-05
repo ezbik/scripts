@@ -7,6 +7,11 @@
 LOG=/var/log/backupninja.log
 CODE=0
 
+cat_logs() {
+cat $LOG            2>/dev/null
+zcat  $LOG.1.gz     2>/dev/null
+}
+
 if test -d /etc/backup.d/ && ! ls /etc/backup.d/ &>/dev/null
 then    TXT="unable to read conf dir"
         CODE=2
@@ -15,23 +20,31 @@ then    TXT="no conf found"
         CODE=0
 elif ! test -f $LOG 
 then	TXT="$LOG doesnt exist"
-	CODE=1
+	CODE=0
 elif  [ "`stat -c %Y $LOG`" -lt "`date +%s -d -1day-12hour`" ]
 then	TXT="$LOG modification time is too old"
 	CODE=1
-elif  ! grep -q "FINISHED:" $LOG 
+elif  ! cat_logs | grep -q "FINISHED:"
 then	TXT="No finished backups"
 	CODE=0
-elif  grep FINISHED: $LOG | tail -n1 | grep -P '\b[1-9](\d+)? (fatal|error)' -q
+elif  cat_logs | grep FINISHED: | tail -n1 | grep -P '\b[1-9](\d+)? (fatal|error)' -q
 then	TXT="last backup had fatals or errors"
 	CODE=2
-elif  grep FINISHED: $LOG | tail -n1 | grep -P '\b[1-9](\d+)? (warning)' -q
+elif  cat_logs | grep FINISHED: | tail -n1 | grep -P '\b[1-9](\d+)? (warning)' -q
 then	TXT="last backup had warnings"
 	CODE=1
-elif grep FINISHED: $LOG | tail -n1 | grep "0 fatal. 0 error. 0 warning." -q
-then	TXT="looks good"
-else	TXT="Unknown"
-	CODE=1
+else    
+        LAST_TIMESTAMP=$( cat_logs |  tail -n 100 | grep -v Skipping | grep -Po '^.*\d\d:\d\d\:\d\d' | uniq  | tail -n1 )
+        if cat_logs | grep "$LAST_TIMESTAMP" | grep -q Fatal
+        then    TXT="last backup had fatals"
+                CODE=2
+        elif cat_logs | grep "$LAST_TIMESTAMP" | grep -q -P "FINISHED: .*0 fatal. 0 error. 0 warning." 
+        then	TXT="looks good ($LAST_TIMESTAMP)"
+        elif    pgrep  backupninja >/dev/null
+        then    TXT="pending, running now"
+        else    TXT="unknown"
+	        CODE=1
+        fi
 fi
 
 case $CODE in
