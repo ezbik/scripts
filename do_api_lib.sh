@@ -239,15 +239,14 @@ echo
 
 do_get_ip () {
 
-local DROPLET_ID=$1
+local DROPLET_ID=$( do_get_id $1)
 echo $DROPLET_ID | grep -P '^\d+$' -q || { echo "use number only in do_get_ip arguement" ; exit 2; }
 
 local TMP=$(mktemp)
-curl -Ss -X GET -H "Content-Type: application/json" -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/droplets/$DROPLET_ID" | tee $TMP
+curl -Ss -X GET -H "Content-Type: application/json" -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/droplets/$DROPLET_ID" > $TMP
 
-echo
 local IP=$( cat $TMP|json_xs | grep ip_address | grep  -oP '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
-echo IP=$IP
+echo $IP
 
 rm $TMP
 
