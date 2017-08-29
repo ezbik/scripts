@@ -303,7 +303,7 @@ do_wait_for_action      {HOSTNAME|DROPLET_ID} ACTION_ID
 do_create_droplet       region=nyc1 name=cacheq111.rmkr.net size=512mb image=ubuntu-14-04-x64 [wait=1]
         size: one of 512mb,1gb,2gb,4gb,8gb,16gb,m-16gb,32gb,m-32gb,48gb,m-64gb,64gb
         region: one of ams1,ams2,ams3,blr1,fra1,lon1,nyc1,nyc2,nyc3,sfo1,sfo2,sgp1,tor1
-do_get_ip               DROPLET_ID
+do_get_ip               {HOSTNAME|DROPLET_ID}
 do_destroy              {HOSTNAME|DROPLET_ID}
 do_rename               {HOSTNAME|DROPLET_ID} name=newname.com 
 "
