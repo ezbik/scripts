@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+
+# script to operate files by detecting Duplicity configuration from Duply / Backupninja frontends
+
+list_timestamps() {
+
+       duplicity  collection-status  $DEST $DUPLICITY_ARGS 2>/dev/null | perl -ne 'if (/^\s+(Incremental|Full)\s+(.+)\s+\d+$/) { print $2,"\n" }' | perl -ne ' use Time::Piece; use Date::Parse ; print localtime( str2time("$_") )->strftime("%FT%T\n") ' 
+
+}
+
+
+autodetect() {
+
+    if which duply &>/dev/null
+    then
+        DUPLYCONF=$( ls /etc/duply/*/conf  | head -n1 )
+        ARCNAME=$( echo $DUPLYCONF | cut -d/  -f4  )
+        source $( ls /etc/duply/*/conf  | head -n1 )
+        export DEST=$TARGET
+        DUPLICITY_ARGS="--name duply_$ARCNAME --no-encryption --allow-source-mismatch "
+    elif which backupninja &>/dev/null
+    then
+        DUPFILE=/etc/backup.d/20-duplicity.dup
+        DEST=$( grep ^destu $DUPFILE | sed 's@^desturl.*= *@@; ' )
+        export AWS_ACCESS_KEY_ID=$( perl -ne 'if (/^awsaccesskeyid\s*=\s*(\S+)/) {print $1} ' < $DUPFILE )
+        export AWS_SECRET_ACCESS_KEY=$( perl -ne 'if (/^awssecretaccesskey\s*=\s*(\S+)/) {print $1} ' < $DUPFILE )
+        export FTP_PASSWORD=$( grep ^ftp_password $DUPFILE  | sed 's@^desturl.*= *@@; s@ @@g' |cut -d= -f2 )
+        DUPLICITY_ARGS="--no-encryption --archive-dir=/var/cache/backupninja/duplicity/"
+    fi
+}
+
+
+
+duplicity_dumb_restore_folder() {
+    folder=$( echo $1 | sed 's@^/*@@' ) # strip first /
+    backup_timestamp=$2
+    restored=/root/restored.$(echo $folder| sed 's@/@.@g').$$
+    duplicity  restore --file-to-restore $folder $DUPLICITY_ARGS  $DEST $restored -t $backup_timestamp 
+    echo "got $restored"
+}
+
+list_current() {
+    duplicity  list $DUPLICITY_ARGS  $DEST  
+}
+
+
+case $1 in
+    "list") 
+            autodetect
+            list_timestamps
+            ;;
+    "restore")
+            autodetect
+            duplicity_dumb_restore_folder $2 $3
+            ;;
+    "list_current") 
+            autodetect
+            list_current
+            ;;
+    *)
+            echo "usage:"
+            echo "$0 list // list available timestamps"
+            echo "$0 list_current // list all files in last backup"
+            echo "$0 restore FOLDER TIMESTAMP   // restore a folder "
+            ;;
+
+esac
