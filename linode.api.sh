@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Author: Pavel Piatruk
+# API reference: https://developers.linode.com/v4/reference/linode
 
 [ -z "$API" ] && { echo "API variable is empty. Pls set it."; exit 2; }
 
@@ -68,6 +70,16 @@ curl -Ss "https://api.linode.com/?api_key=$API&api_action=linode.shutdown&Linode
 
 echo $@ | grep -q wait=1 && wait_for_jobs $LINODEID
 }
+
+function reboot () {
+
+local LINODEID=$( get_linodeid_by_name $1 )
+curl -Ss "https://api.linode.com/?api_key=$API&api_action=linode.reboot&LinodeID=$LINODEID" | json_pp
+
+echo $@ | grep -q wait=1 && wait_for_jobs $LINODEID
+
+}
+
 
 
 function get_pending_jobs() {
@@ -153,6 +165,7 @@ usage() {
     get_linodeid_by_name    LABEL|HOSTNAME
     boot            LINODE_ID|LABEL|HOSTNAME    [wait=1]
     shutdown        LINODE_ID|LABEL|HOSTNAME    [wait=1]
+    reboot          LINODE_ID|LABEL|HOSTNAME    [wait=1]
     downgrade_complete HOSTNAME 
     get_large_cache_servers
     list_ips                        # return list of LINODEID\\tIPADDRESS
@@ -167,7 +180,7 @@ ACTION=$1
 shift
 
 case $ACTION in
-downgrade_complete|get_large_cache_servers|get_linodeid_by_name|boot|shutdown|list_ips|list|get_ip)
+downgrade_complete|get_large_cache_servers|get_linodeid_by_name|boot|shutdown|list_ips|list|get_ip|reboot)
         $ACTION $@
         ;;
 *)      #echo wrong option
