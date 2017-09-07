@@ -8,8 +8,8 @@ LOG=/var/log/backupninja.log
 CODE=0
 
 cat_logs() {
-cat $LOG            2>/dev/null
 zcat  $LOG.1.gz     2>/dev/null
+cat $LOG            2>/dev/null
 }
 
 if test -d /etc/backup.d/ && ! ls /etc/backup.d/ &>/dev/null
