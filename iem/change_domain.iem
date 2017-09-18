@@ -1,0 +1,53 @@
+#!/bin/bash
+
+usage() {
+
+    echo "$0 IEM_DIR NEWDOMAIN"
+    exit
+
+}
+
+
+echo_color() {
+echo -ne "\e[1;35m"$@"\e[0m"
+}
+
+IEM_DIR=$1
+NEWDOMAIN=$2
+
+if [[ -z $NEWDOMAIN ]]
+then usage
+fi
+
+cd $IEM_DIR || exit 
+
+DB=$( cat admin/includes/config.php  |grep SENDSTUDIO_DATABASE_NAME  | cut -d\'  -f4 );
+ORIGDOMAIN=$( cat admin/includes/config.php  | grep SENDSTUDIO_APPLICATION_URL  |  cut -d\'  -f4  | cut -d/ -f3 )
+
+echo
+echo "changing IEM `echo_color $IEM_DIR` from `echo_color $ORIGDOMAIN` to `echo_color $NEWDOMAIN` in DB `echo_color $DB`"
+echo "ok?"
+read n
+
+set -x
+sed -i -e "s@$ORIGDOMAIN@$NEWDOMAIN@g"     admin/includes/config.php  admin/temp/config.*.php            
+mysqldump -q $DB | pv | sed  "s@$ORIGDOMAIN@$NEWDOMAIN@g" > .sql.1
+pv .sql.1 | mysql $DB
+rm -fv .sql .sql.1 
+
+rm -vf  ./admin/com/storage/iem_stash_storage.backup_2.php ./admin/com/storage/iem_stash_storage.php ./admin/com/storage/iem_stash_storage.backup_1.php
+
+set +x
+
+if curl localhost/iem/ -H  "Host: miniprojektor.info" -v  2>&1 | grep "Location.*$DOMAIN"
+then    echo OK
+
+
+        NEW_ADMIN_PASS=$(openssl rand -hex 5)
+        mysql $DB -se "update email_users set password=md5(concat(md5(unique_token), md5('$NEW_ADMIN_PASS'))) where username='admin' ; "
+        rm -f  ./admin/com/storage/iem_stash_storage.backup_2.php ./admin/com/storage/iem_stash_storage.php ./admin/com/storage/iem_stash_storage.backup_1.php
+        echo_color "\n\n IEM\nhttp://$NEWDOMAIN/iem\nadmin $NEW_ADMIN_PASS\n\n"
+else    echo FAIL_LOCATION
+fi
+
+
