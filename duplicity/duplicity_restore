@@ -3,6 +3,23 @@
 
 # script to operate files by detecting Duplicity configuration from Duply / Backupninja frontends
 
+
+check_perl_module() {
+
+perl -e " use $1 ; "  || {
+    if which rpm &>/dev/null 
+    then    echo yum install $2
+    else    echo apt-get install $3
+    fi
+    exit 2
+}
+
+}
+
+check_perl_module Time::Piece perl-Time-Piece perl-modules
+check_perl_module Date::Parse perl-DateTime-Format-DateParse.noarch libtimedate-perl
+
+
 list_timestamps() {
 
        duplicity  collection-status  $DEST $DUPLICITY_ARGS 2>/dev/null | perl -ne 'if (/^\s+(Incremental|Full)\s+(.+)\s+\d+$/) { print $2,"\n" }' | perl -ne ' use Time::Piece; use Date::Parse ; print localtime( str2time("$_") )->strftime("%FT%T\n") ' 
@@ -35,8 +52,8 @@ autodetect() {
 duplicity_dumb_restore_folder() {
     folder=$( echo $1 | sed 's@^/*@@' ) # strip first /
     backup_timestamp=$2
-    restored=/root/restored.$(echo $folder| sed 's@/@.@g').$$
-    duplicity  restore --file-to-restore $folder $DUPLICITY_ARGS  $DEST $restored -t $backup_timestamp 
+    restored=/root/restored.$(echo $folder| sed 's@/@.@g')."$backup_timestamp"_$$
+    duplicity  restore --file-to-restore $folder $DUPLICITY_ARGS  $DEST "$restored" -t $backup_timestamp 
     echo "got $restored"
 }
 
