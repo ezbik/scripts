@@ -41,12 +41,6 @@ set +x
 
 if curl localhost/iem/ -H  "Host: miniprojektor.info" -v  2>&1 | grep "Location.*$DOMAIN"
 then    echo OK
-
-
-        NEW_ADMIN_PASS=$(openssl rand -hex 5)
-        mysql $DB -se "update email_users set password=md5(concat(md5(unique_token), md5('$NEW_ADMIN_PASS'))) where username='admin' ; "
-        rm -f  ./admin/com/storage/iem_stash_storage.backup_2.php ./admin/com/storage/iem_stash_storage.php ./admin/com/storage/iem_stash_storage.backup_1.php
-        echo_color "\n\n IEM\nhttp://$NEWDOMAIN/iem\nadmin $NEW_ADMIN_PASS\n\n"
 else    echo FAIL_LOCATION
 fi
 

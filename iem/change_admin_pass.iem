@@ -1,0 +1,41 @@
+#!/bin/bash
+
+usage() {
+
+    echo "$0 IEM_DIR NEWPASS"
+    exit
+
+}
+
+
+echo_color() {
+echo -ne "\e[1;35m"$@"\e[0m"
+}
+
+IEM_DIR=$1
+NEWPASS=$2
+
+if [[ -z $NEWPASS ]]
+then usage
+fi
+
+cd $IEM_DIR || exit 
+
+DB=$( cat admin/includes/config.php  |grep SENDSTUDIO_DATABASE_NAME  | cut -d\'  -f4 );
+DOMAIN=$( cat admin/includes/config.php  | grep SENDSTUDIO_APPLICATION_URL  |  cut -d\'  -f4  | cut -d/ -f3 )
+
+if [[ -z $DB ]]
+then    echo failed to get DB
+        exit
+fi
+
+echo
+echo "changing IEM pass in `echo_color $IEM_DIR` in DB `echo_color  $DB` "
+echo "ok?"
+read n
+
+        mysql $DB -se "update email_users set password=md5(concat(md5(unique_token), md5('$NEWPASS'))) where username='admin' ; "
+        rm -f  ./admin/com/storage/iem_stash_storage.backup_2.php ./admin/com/storage/iem_stash_storage.php ./admin/com/storage/iem_stash_storage.backup_1.php
+        echo_color "\n\n IEM\nhttp://$DOMAIN/iem\nadmin $NEWPASS\n\n"
+
+
