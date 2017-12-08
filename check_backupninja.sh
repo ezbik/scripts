@@ -8,8 +8,8 @@ LOG=/var/log/backupninja.log
 CODE=0
 
 cat_logs() {
-zcat  $LOG.1.gz     2>/dev/null
-cat $LOG            2>/dev/null
+zcat  $LOG.1.gz     2>/dev/null | strings
+cat $LOG            2>/dev/null | strings
 }
 
 if test -d /etc/backup.d/ && ! ls /etc/backup.d/ &>/dev/null
@@ -36,7 +36,7 @@ then	TXT="last backup had warnings"
 else    
         LAST_TIMESTAMP=$( cat_logs |  tail -n 100 | grep -v Skipping | grep -Po '^.*\d\d:\d\d\:\d\d' | uniq  | tail -n1 )
         if cat_logs | grep "$LAST_TIMESTAMP" | grep -q Fatal
-        then    TXT="last backup had fatals"
+        then    TXT="last backup had fatals ($LAST_TIMESTAMP)"
                 CODE=2
         elif cat_logs | grep "$LAST_TIMESTAMP" | grep -q -P "FINISHED: .*0 fatal. 0 error. 0 warning." 
         then	TXT="looks good ($LAST_TIMESTAMP)"
