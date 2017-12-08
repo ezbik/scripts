@@ -139,6 +139,33 @@ curl -Ss "https://api.linode.com/?api_key=$API&api_action=linode.list"|  json_xs
 
 }
 
+get_datacenter() {
+
+local LINODEID=$( get_linodeid_by_name $1 )
+
+local DATACENTERID=$(    curl -Ss "https://api.linode.com/?api_key=$API&api_action=linode.list"|  json_xs  -e ' foreach my $e ((@{$_->{"DATA"}})) { if ($e->{LINODEID} eq "'$LINODEID'") { print $e->{DATACENTERID},"\n" } }; $_=undef;  ' -t string )
+
+
+curl -Ss "https://api.linode.com/?api_key=$API&api_action=avail.datacenters"|  json_xs  -e ' foreach my $e ((@{$_->{"DATA"}})) { if ($e->{DATACENTERID} eq "'$DATACENTERID'") { print $e->{ABBR},"\n" } }; $_=undef;  ' -t string 
+
+
+}
+
+get_lish_cmd() {
+
+local LABEL=$1
+LABEL=$( echo $LABEL | cut -d.  -f1 )
+
+## well it is better to detect the correct datacenter. but it will also work if you connect to the default one
+
+#local DC=$( get_datacenter $LABEL )
+local DC=newark
+echo "ssh -t $LINODE_USER@lish-$DC.linode.com $LABEL"
+
+
+
+
+}
 
 downgrade_complete() {
 
@@ -159,6 +186,20 @@ boot $LINODEID wait=1
 
 }
 
+
+reboot_to_rescue() {
+
+# https://developers.linode.com/v4/reference/endpoints/linode/instances/$id/rescue
+
+:
+echo tobedone
+
+}
+
+
+
+
+
 usage() {
 
     echo "usage:
@@ -171,6 +212,9 @@ usage() {
     list_ips                        # return list of LINODEID\\tIPADDRESS
     list                            # return list of LINODEID\\tLABEL
     get_ip          LINODE_ID|LABEL|HOSTNAME
+    get_datacenter  LINODE_ID|LABEL|HOSTNAME
+    get_lish_cmd    LABEL|HOSTNAME
+    reboot_to_rescue    LINODE_ID|LABEL|HOSTNAME
 "
 
 }
@@ -180,7 +224,7 @@ ACTION=$1
 shift
 
 case $ACTION in
-downgrade_complete|get_large_cache_servers|get_linodeid_by_name|boot|shutdown|list_ips|list|get_ip|reboot)
+downgrade_complete|get_large_cache_servers|get_linodeid_by_name|boot|shutdown|list_ips|list|get_ip|reboot|get_datacenter|get_lish_cmd|reboot_to_rescue)
         $ACTION $@
         ;;
 *)      #echo wrong option
