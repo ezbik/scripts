@@ -33,7 +33,7 @@ get_target_uid "$@"
 #     '/usr/share/php/wp-cli/bin/wp: 23: cd: can't cd to /root'
 sudo -u "#$TARGET_UID" -- bash -c "cd $PWD &>/dev/null" || cd /
 
-if [[ $(id -u)) == $TARGET_UID ]]
+if [[ $(id -u) == $TARGET_UID ]]
 then
     # we are same user as target path
     $WP_CLI "$@"
