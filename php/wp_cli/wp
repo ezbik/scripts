@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# pre requisite
+# wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -O /opt/wp-cli.phar
+# chmod 755 /opt/wp-cli.phar
+
+
+#WP_CLI=/usr/share/php/wp-cli/bin/wp
+WP_CLI=/opt/wp-cli.phar
+get_target_uid () {
+
+# returns UID of owner of target WP site
+
+# parse '--path=xxx' 
+TARGET_PATH=$( echo "$@"|  perl -ne ' if (m/--path=(\S+)/) {print $1,"\n"}' )
+[ -d "$TARGET_PATH" ]  && TARGET_UID=$( stat "$TARGET_PATH" -c %u )
+[ -n "$TARGET_UID" ] && [ "$TARGET_UID" != 0 ] && return 0
+
+#otherwise return  UID of curr.work.dir.
+TARGET_UID=$( stat . -c %u )
+[ -n "$TARGET_UID" ] && [ "$TARGET_UID" != 0 ] && return 0
+
+# otherwise return UID of www-data
+TARGET_UID=$(id -u www-data) ; return 0
+
+}
+
+#set -x
+
+get_target_uid "$@" 
+
+# change folder to something readable by target USER. Otherwise we will see an error:
+#     '/usr/share/php/wp-cli/bin/wp: 23: cd: can't cd to /root'
+sudo -u "#$TARGET_UID" -- bash -c "cd $PWD &>/dev/null" || cd /
+
+if [[ $(id -u)) == $TARGET_UID ]]
+then
+    # we are same user as target path
+    $WP_CLI "$@"
+else
+    sudo -u "#$TARGET_UID"  -- $WP_CLI "$@"
+fi
+
+#set +x
