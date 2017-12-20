@@ -4,6 +4,7 @@
 curl  https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar > /opt/wp-cli.phar 
 chmod 755 /opt/wp-cli.phar -v
 
-rsync -avz --no-owner --no-group --no-perms -c -O -e 'ssh -p6996 -o StrictHostKeyChecking=no'  fuck@pathos.tanatos.org:crypt/nk/php/wp_cli/wp /usr/local/bin/
+curl https://raw.githubusercontent.com/ezbik/scripts/master/php/wp_cli/wp > /usr/local/bin/wp
+chmod 755 /usr/local/bin/wp
 
 
