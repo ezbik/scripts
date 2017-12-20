@@ -5,7 +5,9 @@
 # chmod 755 /opt/wp-cli.phar
 
 
-#WP_CLI=/usr/share/php/wp-cli/bin/wp
+# usage:
+#   PHP_BINARY=php5 wp user list
+
 WP_CLI=/opt/wp-cli.phar
 get_target_uid () {
 
@@ -29,16 +31,16 @@ TARGET_UID=$(id -u www-data) ; return 0
 
 get_target_uid "$@" 
 
-# change folder to something readable by target USER. Otherwise we will see an error:
-#     '/usr/share/php/wp-cli/bin/wp: 23: cd: can't cd to /root'
-sudo -u "#$TARGET_UID" -- bash -c "cd $PWD &>/dev/null" || cd /
 
 if [[ $(id -u) == $TARGET_UID ]]
 then
     # we are same user as target path
-    $WP_CLI "$@"
+    $PHP_BINARY $WP_CLI "$@"
 else
-    sudo -u "#$TARGET_UID"  -- $WP_CLI "$@"
+    # change folder to something readable by target USER. Otherwise we will see an error:
+    #     '/usr/share/php/wp-cli/bin/wp: 23: cd: can't cd to /root'
+    sudo -u "#$TARGET_UID" -- bash -c "cd $PWD &>/dev/null" || cd /
+    sudo -u "#$TARGET_UID"  -- $PHP_BINARY $WP_CLI "$@"
 fi
 
 #set +x
