@@ -189,11 +189,25 @@ boot $LINODEID wait=1
 
 reboot_to_rescue() {
 
+
 # https://developers.linode.com/v4/reference/endpoints/linode/instances/$id/rescue
 
-:
-echo tobedone
+[ -z "$TOKEN" ] && { echo empty token ; exit 2; }
 
+local LINODEID=$( get_linodeid_by_name $1)
+local DISKID=$( get_diskid_by_linodeid $LINODEID )
+
+
+curl -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $TOKEN" \
+    -X POST -d '{
+        "devices": {
+          "sdb": {"disk_id": '$DISKID'}
+        }
+    }' \
+    https://api.linode.com/v4/linode/instances/$LINODEID/rescue
+
+echo $@ | grep -q wait=1 && wait_for_jobs $LINODEID
 }
 
 
@@ -204,17 +218,17 @@ usage() {
 
     echo "usage:
     get_linodeid_by_name    LABEL|HOSTNAME
-    boot            LINODE_ID|LABEL|HOSTNAME    [wait=1]
-    shutdown        LINODE_ID|LABEL|HOSTNAME    [wait=1]
-    reboot          LINODE_ID|LABEL|HOSTNAME    [wait=1]
+    boot            LINODEID|LABEL|HOSTNAME    [wait=1]
+    shutdown        LINODEID|LABEL|HOSTNAME    [wait=1]
+    reboot          LINODEID|LABEL|HOSTNAME    [wait=1]
     downgrade_complete HOSTNAME 
     get_large_cache_servers
     list_ips                        # return list of LINODEID\\tIPADDRESS
     list                            # return list of LINODEID\\tLABEL
-    get_ip          LINODE_ID|LABEL|HOSTNAME
-    get_datacenter  LINODE_ID|LABEL|HOSTNAME
+    get_ip          LINODEID|LABEL|HOSTNAME
+    get_datacenter  LINODEID|LABEL|HOSTNAME
     get_lish_cmd    LABEL|HOSTNAME
-    reboot_to_rescue    LINODE_ID|LABEL|HOSTNAME
+    reboot_to_rescue    LINODEID|LABEL|HOSTNAME
 "
 
 }
