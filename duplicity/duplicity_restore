@@ -19,7 +19,7 @@ perl -e " use $1 ; "  || {
 check_perl_module Time::Piece perl-Time-Piece perl-modules
 check_perl_module Date::Parse perl-DateTime-Format-DateParse.noarch libtimedate-perl
 
-list_raw() {
+list() {
 
        duplicity  collection-status  $DEST $DUPLICITY_ARGS 2>/dev/null 
 
@@ -71,15 +71,15 @@ list_current() {
 case $1 in
     "list") 
             autodetect
-            list_timestamps
+            list
             ;;
     "restore")
             autodetect
             duplicity_dumb_restore_folder $2 $3
             ;;
-    "list_raw") 
+    "list_timestamps") 
             autodetect
-            list_raw
+            list_timestamps
             ;;
     "list_current") 
             autodetect
@@ -87,10 +87,10 @@ case $1 in
             ;;
     *)
             echo "usage:"
-            echo "$0 list // list available timestamps"
-            echo "$0 list_raw // dump all details as duplicity does"
+            echo "$0 list // dump all details as duplicity does"
+            echo "$0 list_timestamps // only list timestamps"
             echo "$0 list_current // list all files in last backup"
-            echo "$0 restore FOLDER TIMESTAMP   // restore a folder using timestamp from list()"
+            echo "$0 restore FOLDER TIMESTAMP   // restore a folder using timestamp from list_timestamps()"
             ;;
 
 esac
