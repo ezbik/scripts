@@ -39,7 +39,7 @@ rm -vf  ./admin/com/storage/iem_stash_storage.backup_2.php ./admin/com/storage/i
 
 set +x
 
-if curl localhost/iem/ -H  "Host: miniprojektor.info" -v  2>&1 | grep "Location.*$DOMAIN"
+if curl localhost/iem/ -H  "Host: $NEWDOMAIN" -v  2>&1 | grep "Location.*$NEWDOMAIN.*admin/index.php"
 then    echo OK
 else    echo FAIL_LOCATION
 fi
