@@ -23,7 +23,15 @@ TARGET_UID=$( stat . -c %u )
 [ -n "$TARGET_UID" ] && [ "$TARGET_UID" != 0 ] && return 0
 
 # otherwise return UID of www-data
-TARGET_UID=$(id -u www-data) ; return 0
+if id www-data &>/dev/null
+then    TARGET_UID=$(id -u www-data) 
+elif    id nobody  &>/dev/null
+then    TARGET_UID=$(id -u nobody ) 
+else    echo cant detect target uid
+        exit 2
+fi
+
+return 0
 
 }
 
