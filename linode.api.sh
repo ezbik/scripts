@@ -92,8 +92,7 @@ curl -Ss "https://api.linode.com/?api_key=$API&api_action=linode.job.list&Linode
 
 function wait_for_jobs() {
 
-local LINODEID=$1
-
+local LINODEID=$( get_linodeid_by_name $1 )
 
 while :; 
 do 
@@ -192,7 +191,7 @@ reboot_to_rescue() {
 
 # https://developers.linode.com/v4/reference/endpoints/linode/instances/$id/rescue
 
-[ -z "$TOKEN" ] && { echo empty token ; exit 2; }
+[ -z "$TOKEN" ] && { echo "empty token, get one at https://cloud.linode.com/profile/tokens" ; exit 2; }
 
 local LINODEID=$( get_linodeid_by_name $1)
 local DISKID=$( get_diskid_by_linodeid $LINODEID )
@@ -229,6 +228,7 @@ usage() {
     get_datacenter  LINODEID|LABEL|HOSTNAME
     get_lish_cmd    LABEL|HOSTNAME
     reboot_to_rescue    LINODEID|LABEL|HOSTNAME
+    wait_for_jobs       LINODEID|LABEL|HOSTNAME
 "
 
 }
@@ -238,7 +238,7 @@ ACTION=$1
 shift
 
 case $ACTION in
-downgrade_complete|get_large_cache_servers|get_linodeid_by_name|boot|shutdown|list_ips|list|get_ip|reboot|get_datacenter|get_lish_cmd|reboot_to_rescue)
+downgrade_complete|get_large_cache_servers|get_linodeid_by_name|boot|shutdown|list_ips|list|get_ip|reboot|get_datacenter|get_lish_cmd|reboot_to_rescue|wait_for_jobs)
         $ACTION $@
         ;;
 *)      #echo wrong option
