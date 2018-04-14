@@ -210,6 +210,15 @@ echo $@ | grep -q wait=1 && wait_for_jobs $LINODEID
 }
 
 
+showstatus () {
+
+
+local LABEL=$( echo $1  | cut -d.  -f1 )
+
+linode-linode --api-key $API -a show --label $LABEL
+
+
+}
 
 
 
@@ -229,6 +238,7 @@ usage() {
     get_lish_cmd    LABEL|HOSTNAME
     reboot_to_rescue    LINODEID|LABEL|HOSTNAME
     wait_for_jobs       LINODEID|LABEL|HOSTNAME
+    showstatus          LABEL|HOSTNAME
 "
 
 }
@@ -238,7 +248,7 @@ ACTION=$1
 shift
 
 case $ACTION in
-downgrade_complete|get_large_cache_servers|get_linodeid_by_name|boot|shutdown|list_ips|list|get_ip|reboot|get_datacenter|get_lish_cmd|reboot_to_rescue|wait_for_jobs)
+downgrade_complete|get_large_cache_servers|get_linodeid_by_name|boot|shutdown|list_ips|list|get_ip|reboot|get_datacenter|get_lish_cmd|reboot_to_rescue|wait_for_jobs|showstatus)
         $ACTION $@
         ;;
 *)      #echo wrong option
