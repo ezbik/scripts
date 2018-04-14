@@ -6,7 +6,7 @@ export MYROOT=/var/lib/ssllabs
 export PARALLEL=10
 mkdir -p $MYROOT
 
-docker images |grep jumanjiman/ssllabs-scan -q  || { echo download ssllabs-scan ; exit 2 ; }
+
 
 #function scan() {
 #
@@ -30,6 +30,8 @@ cat  /etc/ssl_domains.txt | grep -Ev '(^$|^#)' | xargs -P$PARALLEL -n1 -ID -- ba
 #export ssllabs_RUN="ssllabs-scan"
 export ssllabs_RUN="docker run --rm -t jumanjiman/ssllabs-scan"
 function scan_domain() {
+
+docker images |grep jumanjiman/ssllabs-scan -q  || { echo download ssllabs-scan ; exit 2 ; }
 
 local DOMAIN=$1
 local GRADE=""
