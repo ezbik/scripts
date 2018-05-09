@@ -58,7 +58,16 @@ autodetect() {
 duplicity_dumb_restore_folder() {
     folder=$( echo $1 | sed 's@^/*@@' ) # strip first /
     backup_timestamp=$2
+
+    if [[ -z $backup_timestamp ]]
+    then    backup_timestamp=$( list_timestamps | head -n1 )
+            if [[ -z $backup_timestamp ]]
+            then    echo "cant detect timestamp to restore from"
+                    exit 2
+            fi
+    fi
     restored=~/restored.$(echo $folder| sed 's@/@.@g')."$backup_timestamp"_$$
+    echo "= restoring $folder to $restored"
     duplicity  restore --file-to-restore $folder $DUPLICITY_ARGS  $DEST "$restored" -t $backup_timestamp 
     echo "got $restored"
 }
@@ -90,7 +99,7 @@ case $1 in
             echo "$0 list // dump all details as duplicity does"
             echo "$0 list_timestamps // only list timestamps"
             echo "$0 list_current // list all files in last backup"
-            echo "$0 restore FOLDER TIMESTAMP   // restore a folder using timestamp from list_timestamps()"
+            echo "$0 restore FOLDER [TIMESTAMP]   // restore a folder using timestamp from list_timestamps()"
             ;;
 
 esac

@@ -1,0 +1,85 @@
+#!/bin/bash
+
+exitmessage() {
+    echo -e "$1"
+    echo "USAGE: $0 domain.com [force=1]"
+    exit
+}
+
+test -f /etc/redhat-release && DISTRO=centos
+test -f /etc/debian_version && DISTRO=debian
+
+function apache_reload {
+
+
+        [ "$DISTRO" == centos ] && {
+            APACHE_SERVICE=httpd
+        }
+
+        [ "$DISTRO" == debian ] && {
+            APACHE_SERVICE=apache2
+        }
+
+        echo "== reloading service $APACHE_SERVICE"
+        service $APACHE_SERVICE reload || echo "error reloading apache"
+
+}
+
+
+DOMAIN=$1
+
+[[ -z $DOMAIN ]] && exitmessage
+
+LE_INC="/var/lib/le/webservers-inc/apache/$DOMAIN.inc"
+
+test -f "$LE_INC" || exitmessage "Inc file $LE_INC doesnt exist"
+
+echo $@ | grep force=1 -q && FORCE=1
+
+VHOST=$( 
+
+  { 
+  grep -iP 'ServerName\s+'$DOMAIN'\s*$' /etc/httpd/vhosts.d/*conf /etc/apache2/sites-available/*  -l;
+  grep -iP 'ServerAlias\s+(www.)?'$DOMAIN'\s*$' /etc/httpd/vhosts.d/*conf /etc/apache2/sites-available/* -l ; 
+  } 2>/dev/null  | head -n1
+ )
+
+
+
+
+if test -f "$VHOST"
+then    echo "== detected VHOST $VHOST"
+else    exitmessage "unknown VHOST location"
+fi
+
+if cat $VHOST 2>/dev/null | grep --color 'sslengine' -qi
+then  #ssl already installed
+    if [ "$FORCE" == 1 ]
+    then
+        echo "== purging old ssl conf from the vhost"
+    else
+        echo "== vhost already has ssl; use force=1 to reinstall"
+        # here lets restart apache because the CRT may be renewed eventhough SSL directives are in place.
+        exit
+    fi
+fi
+
+
+SSL_PORTION='\
+        SSLEngine On\
+        Include /var/lib/le/webservers-inc/apache/'$DOMAIN'.inc'
+
+TMP=`mktemp`
+cat "$VHOST" > $TMP
+
+if [ "$FORCE" == "1" ]; then #purify ssl firstly
+    sed '/VirtualHost.*443/,/\/VirtualHost/d' -i $TMP
+fi
+
+# insert ssl into pure vhost
+cat "$TMP" | sed 's@\(^<VirtualHost.*\):80>@\1:443>@; /CustomLog/s@$@'"$SSL_PORTION"@ >> $TMP
+
+diff -Naur "$VHOST" $TMP
+mv $TMP "$VHOST" 
+
+apache_reload

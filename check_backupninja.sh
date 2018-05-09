@@ -24,6 +24,9 @@ then	TXT="$LOG doesnt exist"
 elif  [ "`stat -c %Y $LOG`" -lt "`date +%s -d -1day-12hour`" ]
 then	TXT="$LOG modification time is too old"
 	CODE=1
+elif    pgrep  backupninja >/dev/null
+then    TXT="pending, running now"
+	CODE=0
 elif  ! cat_logs | grep -q "FINISHED:"
 then	TXT="No finished backups"
 	CODE=0
@@ -40,10 +43,8 @@ else
                 CODE=2
         elif cat_logs | grep "$LAST_TIMESTAMP" | grep -q -P "FINISHED: .*0 fatal. 0 error. 0 warning." 
         then	TXT="looks good ($LAST_TIMESTAMP)"
-        elif    pgrep  backupninja >/dev/null
-        then    TXT="pending, running now"
         else    TXT="unknown"
-	        CODE=1
+	            CODE=1
         fi
 fi
 
