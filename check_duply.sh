@@ -30,7 +30,7 @@ elif  ! test -f $LOCKFILE && grep -q "FAIL" $LOG
 then	TXT="last backup had fatals or errors, review /var/log/duply.log"
 	CODE=2
 elif  grep -q "OK" $LOG 
-then	TXT="looks good ["$(date +%F-%T -d@$(stat -c %Y /var/log/duply.status ))"]"
+then	TXT="looks good ["$(date +%F-%T -d@$(stat -c %Y $LOG ))"]"
 	CODE=0
 else	TXT="Unknown, review /var/log/duply.log"
 	CODE=1
