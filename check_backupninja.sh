@@ -22,7 +22,7 @@ elif ! test -f $LOG
 then	TXT="$LOG doesnt exist"
 	CODE=0
 elif  [ "`stat -c %Y $LOG`" -lt "`date +%s -d -1day-12hour`" ]
-then	TXT="$LOG modification time is too old"
+then	TXT="$LOG modification time is too old ["$(date -d@$(stat -c %Y $LOG) +"%F %T")"]"
 	CODE=1
 elif    pgrep  backupninja >/dev/null
 then    TXT="pending, running now"
