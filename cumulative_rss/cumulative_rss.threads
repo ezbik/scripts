@@ -192,8 +192,9 @@ foreach my $item ( $feed->get_item() ) {
 $str=$feed2->to_string();
 $str=~s@rss version="2.0"@rss xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"@m;
 #highlight
-$str=~s/($keyword_regex)/&lt;font color=magenta&gt;$1&lt;\/font&gt;/gim;
-$str=~s/($bad_keyword_regex)/&lt;font color=gray&gt;$1&lt;\/font&gt;/gim;
+#$str=~s/($keyword_regex)/&lt;font color=magenta&gt;$1&lt;\/font&gt;/gim;
+#$str=~s/($bad_keyword_regex)/&lt;font color=gray&gt;$1&lt;\/font&gt;/gim;
+$str=~s/.*coop:keyword.*//g;
 open OUT, ">$out_rss";
 print OUT $str;
 close OUT;
