@@ -232,6 +232,7 @@ foreach $i  ($beg..$end)
         chomp $source;
         my $tmp=mktemp("/tmp/rss.XXXXXXXXX");
         print "T$threadN; processing $i, $source to $tmp\n";
+        if ($source=~/upwork/) { system ("sleep 1.5");}
         my $feed = XML::FeedPP::RSS->new($source);
         $feed->to_file($tmp);
         push(@files,$tmp);
