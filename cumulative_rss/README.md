@@ -10,3 +10,12 @@ The script is to
 prereqs:
 
     apt-get install  libdatetime-format-w3cdtf-perl libxml-feedpp-perl 
+
+Installation:
+
+crontab:
+
+    */5 * * * *     timeout 90 run-one /usr/local/bin/cumulative_rss.threads > /dev/null
+    */5 * * * *     timeout 90 run-one /usr/local/bin/cumulative_rss.threads -f /etc/rss.gaf -o /var/www/gaf.rss > /dev/null
+
+
