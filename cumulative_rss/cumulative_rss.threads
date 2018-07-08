@@ -1,11 +1,23 @@
 #!/usr/bin/perl
 
+use Getopt::Std;
+
+my %options=();
+
+getopts("f:o:t:", \%options);
+
+
+# locattion of the file with RSS URL-s.
+if ($options{f}) { $rss_file=$options{f} }  else { $rss_file="/etc/rss"; }
+# where to save cumulated RSS feed
+if ($options{o}) { $out_rss=$options{o} }  else { $out_rss="/var/www/odesk.rss"; }
+# 
+if ($options{t}) { $n_of_threads=$options{t} }  else { $n_of_threads=1; }
+
 # process only pages since N days ago 
 $days=3;
-# locattion of the file with RSS URL-s.
-$rss_file="/etc/rss";
-# where to save cumulated RSS feed
-$out_rss="/var/www/odesk.rss";
+
+if (! -f $rss_file ) { die "cant read rss file $rss_file\n"}
 
 # good & bad keywords
 @keywords=(
@@ -130,7 +142,6 @@ $feed2->description( "RSS"  );
 use threads;
 use threads::shared;
 
-$n_of_threads=3;
 
 for(0..$n_of_threads-1) {
 
