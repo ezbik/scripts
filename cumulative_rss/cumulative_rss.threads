@@ -136,7 +136,8 @@ my $feed2 = XML::FeedPP::RSS->new();
 $feed2->title( "cumulative_rss" );
 $feed2->description( "RSS"  );
 
-@a=shuffled(@sources);
+#@a=shuffled(@sources);
+@a=@sources;
 #######threads!
 
 use threads;
