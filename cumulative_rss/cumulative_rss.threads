@@ -162,6 +162,12 @@ print "All threads are stopped\n";
 
 my $feed = XML::FeedPP::RSS->new();
 
+if (scalar (@files) == 0 )
+{
+print "=got zero \@files ; exit\n";
+exit 2;
+}
+
 foreach $source (@files)
 {
 $feed -> merge ( $source );
