@@ -164,7 +164,7 @@ my $feed = XML::FeedPP::RSS->new();
 
 if (scalar (@files) == 0 )
 {
-print "=got zero \@files ; exit\n";
+print STDERR "=got zero \@files ; exit\n";
 exit 2;
 }
 
