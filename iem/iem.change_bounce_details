@@ -1,0 +1,64 @@
+#!/bin/bash
+
+usage() {
+
+    echo "$0 IEM_DIR [BOUNCE_PASSWORD]"
+    exit
+
+}
+
+echo_color() {
+echo -ne "\e[1;35m"$@"\e[0m\n"
+}
+
+IEM_DIR=$1
+BOUNCECLEARPASSWORD=$2
+
+
+cd $IEM_DIR && test -f admin/includes/config.php || { echo_color dst dir isnt IEM installation ; exit; }
+
+if test -n "$2" 
+then    BOUNCECLEARPASSWORD=$2
+else    BOUNCECLEARPASSWORD=$( openssl rand 8 -hex )
+fi
+
+BOUNCEHASHPASSWORD=`echo -n $BOUNCECLEARPASSWORD | openssl enc -base64 -in /dev/stdin -out /dev/stdout`
+
+BOUNCE_UNAME=bounce
+IEM_DOMAIN=$( grep SENDSTUDIO_APPLICATION_URL admin/includes/config.php | cut -d\'  -f4| cut -d/ -f3 )
+BOUNCEADDRESS=$BOUNCE_UNAME@$IEM_DOMAIN ; # echo $BOUNCEADDRESS
+
+DB=$( cat admin/includes/config.php  |grep SENDSTUDIO_DATABASE_NAME  | cut -d\'  -f4 ); #echo $DB
+
+echo
+echo_color "changing bounce details to
+ $BOUNCEADDRESS / 
+$BOUNCECLEARPASSWORD / $BOUNCEHASHPASSWORD
+in DB $DB"
+
+echo
+read n
+
+echo $BOUNCE_UNAME:$BOUNCECLEARPASSWORD | chpasswd
+
+### email lists:
+# fix bounce settings  
+mysql $DB -se "update email_lists set bounceserver='127.0.0.1', bounceusername='$BOUNCE_UNAME', bouncepassword='$BOUNCEHASHPASSWORD', bounceemail='$BOUNCEADDRESS', extramailsettings='/novalidate-cert' "
+# show them.
+mysql $DB -e "select name,bounceemail,bouncepassword,bounceserver,bounceusername,extramailsettings from email_lists ;"
+
+
+### default settings
+# fix 
+mysql $DB -se "update email_config_settings set areavalue='127.0.0.1'           where area='BOUNCE_SERVER' "
+mysql $DB -se "update email_config_settings set areavalue='$BOUNCEHASHPASSWORD' where area='BOUNCE_PASSWORD' " 
+mysql $DB -se "update email_config_settings set areavalue='/novalidate-cert'    where area='BOUNCE_EXTRASETTINGS' "  
+
+mysql $DB -se "update email_config_settings set areavalue='$BOUNCEADDRESS'    where area='BOUNCE_ADDRESS' "         
+mysql $DB -se "update email_config_settings set areavalue='$BOUNCE_UNAME'    where area='BOUNCE_USERNAME' "
+
+# show
+mysql $DB -se "select area,areavalue from email_config_settings where area rlike 'BOUNCE_.*' "
+
+
+rm admin/com/storage/iem_stash_storage.* -f
