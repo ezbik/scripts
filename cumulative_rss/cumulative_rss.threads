@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use Getopt::Std;
+use Try::Tiny;
 
 my %options=();
 
@@ -16,6 +17,8 @@ if ($options{t}) { $n_of_threads=$options{t} }  else { $n_of_threads=1; }
 
 # process only pages since N days ago 
 $days=3;
+# max sleep when retrying
+$max_sleep=10;
 
 if (! -f $rss_file ) { die "cant read rss file $rss_file\n"}
 
@@ -140,6 +143,9 @@ $feed2->description( "RSS"  );
 @a=@sources;
 #######threads!
 
+$piece=sprintf("%.f", (scalar(@a)/$n_of_threads));
+ print "piece of work is $piece elements\n";
+
 use threads;
 use threads::shared;
 
@@ -190,7 +196,7 @@ foreach my $item ( $feed->get_item() ) {
 	my $cmp=DateTime->compare( $dt0, $dt );
 	if ( $cmp == -1) 
 		{
-		print  $item->pubDate(), "\t", $item->title(), "\n";
+		#print  $item->pubDate(), "\t", $item->title(), "\n";
 		$item2=$item;
 		$desc=$item2->description( );
 
@@ -222,33 +228,59 @@ sub gogo {
 
 my $threadN=shift;
 
-my $piece=1+int(scalar @a/$n_of_threads);
 my $beg=($threadN)*$piece;
 my $end=($threadN+1)*$piece-1;
 my $email;
 my @files;
 
-if ($end>scalar @a) { $end=scalar @a-1}
-print "I am T$threadN; I will process elemens from $beg to $end\n";
+if ($end>(scalar @a -1 ) ) { $end=scalar @a -1}
+print "T$threadN; I will process elemens from $beg to $end\n";
 
 my $i;
 foreach $i  ($beg..$end)
 {
-        {
+        
         my $source=$a[$i];
         chomp $source;
         my $tmp=mktemp("/tmp/rss.XXXXXXXXX");
-        print "T$threadN; processing $i, $source to $tmp\n";
-        if ($source=~/upwork/) { system ("sleep 1.5");}
-        my $feed = XML::FeedPP::RSS->new($source);
-        $feed->to_file($tmp);
-        push(@files,$tmp);
-        }
+        print "T$threadN-$i; processing $source\n";
+        #if ($source=~/upwork/) { system ("sleep 1.5");}
+
+        $stilltry=1;
+        my $sleep=2; #initial value
+        my $status=1;
+
+        my $feed;
+        while ($stilltry) {
+            try 
+                {
+                $feed = XML::FeedPP::RSS->new($source);
+                # downloaded well..
+                $stilltry=0 ; 
+                $feed->to_file($tmp);
+                push(@files,$tmp);
+                print "T$threadN-$i; OK on $source\n"; 
+                } 
+            catch 
+                { 
+                print "T$threadN-$i; got error on $source ...will sleep $sleep\n"; 
+                $sleep+=1; 
+                };
+
+            if ( $sleep > $max_sleep ) { 
+                print STDERR "T$threadN-$i; giving up on $source..\n"; 
+                $status=0; 
+                #last; 
+                exit;
+                }
+                else { sleep $sleep;  }
+        } # while
+
+
+
+
 }
-
 return @files;
-
-
 }
 
 ###############

@@ -207,6 +207,7 @@ curl -H "Content-Type: application/json" \
     https://api.linode.com/v4/linode/instances/$LINODEID/rescue
 
 echo $@ | grep -q wait=1 && wait_for_jobs $LINODEID
+get_lish_cmd $1
 }
 
 

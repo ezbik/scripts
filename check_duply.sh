@@ -6,7 +6,7 @@
 
 LOG=/var/log/duply.status
 CODE=0
-LOCKFILE=/root/.cache/duplicity/duply_mys3/lockfile.lock
+LOCKFILE=`ls /root/.cache/duplicity/duply_mys3/lockfile{,.lock} 2>/dev/null  | head -n1 `
 
 if    test -f $LOCKFILE && pgrep -f duply.run > /dev/null
 then    TXT="PENDING duply is running"
