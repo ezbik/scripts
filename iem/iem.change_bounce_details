@@ -2,7 +2,7 @@
 
 usage() {
 
-    echo "$0 IEM_DIR [BOUNCE_PASSWORD]"
+    echo "$0 <IEM_DIR> [BOUNCE_PASSWORD]"
     exit
 
 }
@@ -15,7 +15,7 @@ IEM_DIR=$1
 BOUNCECLEARPASSWORD=$2
 
 
-cd $IEM_DIR && test -f admin/includes/config.php || { echo_color dst dir isnt IEM installation ; exit; }
+cd $IEM_DIR && test -f admin/includes/config.php || { echo_color dst dir isnt IEM installation ; usage;  }
 
 if test -n "$2" 
 then    BOUNCECLEARPASSWORD=$2

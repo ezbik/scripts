@@ -1,0 +1,40 @@
+#!/bin/bash
+
+usage() {
+
+    echo "$0 IEM_DIR "
+    exit
+
+}
+
+echo_color() {
+echo -ne "\e[1;35m"$@"\e[0m\n"
+}
+
+IEM_DIR=$1
+
+
+cd $IEM_DIR && test -f admin/includes/config.php || { echo_color dst dir isnt IEM installation ; usage;  }
+
+DB=$( cat admin/includes/config.php  |grep SENDSTUDIO_DATABASE_NAME  | cut -d\'  -f4 ); #echo $DB
+
+# show them.
+mysql $DB -e "select listid,name,bounceemail,bouncepassword,bounceserver,bounceusername,extramailsettings from email_lists ;"
+
+
+### default settings
+# show
+mysql $DB -se "select area,areavalue from email_config_settings where area rlike 'BOUNCE_.*' "
+
+
+# decrypt
+
+HASH=$( mysql $DB -se "select areavalue from email_config_settings where area rlike 'BOUNCE_PASSWORD' "  | cat )
+
+echo 
+echo
+echo "plain password: $( echo $HASH | openssl enc -d -base64 -in /dev/stdin -out /dev/stdout )"
+echo
+
+
+
