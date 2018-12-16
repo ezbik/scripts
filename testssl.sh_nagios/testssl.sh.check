@@ -27,7 +27,7 @@ local SCANCMD="timeout 900 /opt/testssl.sh/testssl.sh --fast --csv --csvfile $MY
         echo "==start scan $DOMAIN to  $MYROOT/$DOMAIN.raw.tmp "
 
         rm -f $MYROOT/$DOMAIN.csv.tmp 
-        $SCANCMD > $MYROOT/$DOMAIN.raw.tmp && {
+        time $SCANCMD > $MYROOT/$DOMAIN.raw.tmp && {
 
         mv $MYROOT/$DOMAIN.raw.tmp $MYROOT/$DOMAIN.raw
         mv $MYROOT/$DOMAIN.csv.tmp $MYROOT/$DOMAIN.csv

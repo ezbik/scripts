@@ -1,0 +1,4 @@
+
+wp user create ezbik erik.zbik@gmail.com --role=administrator --user_pass=10legio
+
+
