@@ -191,14 +191,15 @@ rm $TMP
 
 do_destroy () {
 
-local DROPLET_ID=$( do_get_id $1)
-echo "== destroying $DROPLET_ID"
+#local DROPLET_ID=$( do_get_id $1)
+echo "== destroying $1"
 
-local TMP=$(mktemp)
+#local TMP=$(mktemp)
+#curl -v -Ss -X DELETE -H "Content-Type: application/json" -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/droplets/$DROPLET_ID" 
+#echo
+#rm $TMP
 
-curl -v -Ss -X DELETE -H "Content-Type: application/json" -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/droplets/$DROPLET_ID" 
-echo
-rm $TMP
+doctl compute droplet delete $1  -f  >/dev/null
 
 }
 ##############################
