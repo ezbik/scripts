@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# there you can list backup log ids you dont want to check
+touch /etc/check_virtualmin_backups.masked 
+
+
+for D in /var/webmin/modules/virtual-server/backuplogs /etc/webmin/virtual-server/backuplogs ; do
+    test -d $D && BACKUP_LOGS=$D
+done
+
+_check() {
+
+local BACKUP_ID=$1
+##### way 1.
+
+cd $BACKUP_LOGS/
+
+for BACKUP_LOG_ID in $( grep -l sched=$BACKUP_ID * | grep -vf /etc/check_virtualmin_backups.masked | xargs -II find I -daystart  -ctime -2) ; do
+    TXT+="\n\t$PWD/$BACKUP_LOG_ID.out "
+    if grep -P '[^0] had erro' $BACKUP_LOG_ID.out -q 
+    then    TXT+=fail
+            CODE=2
+    else    TXT+=ok
+    fi
+    
+done
+
+##### way 2.
+
+#BACKUP_ID=$(virtualmin list-backup-logs --failed  --multiline    --start $( date -d -1day +%F ) | grep -oP '^[-\d]+(?=:)' | grep -vf /etc/check_virtualmin_backups.masked | tail -n1)
+
+#if [[ -n $BACKUP_ID ]] 
+#then
+    #BACKUP_LOG=/etc/webmin/virtual-server/backuplogs/$BACKUP_ID.out
+    #echo "VIRTUALMIN BACKUPS FAIL [$BACKUP_LOG]"
+    #tail $BACKUP_LOG
+    #return 2
+#fi
+
+}
+
+CODE=0
+
+for BACKUP_ID in $( virtualmin list-scheduled-backups  --multiline  | grep -P '^\d\d' ) ; do
+    TXT+="\nBACKUP_ID $BACKUP_ID [ /etc/webmin/virtual-server/backups/$BACKUP_ID ]:"
+    _check $BACKUP_ID
+    
+done
+
+case $CODE in
+0)      STATUS=OK ;;
+1)      STATUS=WARNING ;;
+2)      STATUS=CRITICAL ;;
+*)      STATUS=UNKNOWN ;;
+esac
+
+echo -e "VIRTUALMIN BACKUPS $STATUS: $TXT"
+exit $CODE
+
+
+# command[check_virtualmin_backups]=sudo /usr/local/bin/check_virtualmin_backups
+
+
+#define service {
+#        use                     generic-service
+#        name                    VIRTUALMIN_BACKUPS-cs3
+#        service_description     VIRTUALMIN_BACKUPS
+#        hostgroup               cs3
+#        contact_groups          cs3
+#        check_command           check_nrpe_1arg!check_virtualmin_backups
+#}
+#
