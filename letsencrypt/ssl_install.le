@@ -39,8 +39,8 @@ echo $@ | grep force=1 -q && FORCE=1
 VHOST=$( 
 
   { 
-  grep -iP 'ServerName\s+'$DOMAIN'\s*$' /etc/httpd/vhosts.d/*conf /etc/apache2/sites-available/*  -l;
-  grep -iP 'ServerAlias\s+(www.)?'$DOMAIN'\s*$' /etc/httpd/vhosts.d/*conf /etc/apache2/sites-available/* -l ; 
+  grep -iP 'ServerName\s+'$DOMAIN'\s*$' /etc/httpd/vhosts.d/* /etc/apache2/sites-available/*  -l;
+  grep -iP 'ServerAlias\s+(www.)?'$DOMAIN'\s*$' /etc/httpd/vhosts.d/* /etc/apache2/sites-available/* -l ; 
   } 2>/dev/null  | head -n1
  )
 
