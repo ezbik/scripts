@@ -49,7 +49,7 @@ do
     then    
             
             TXT_DOMAIN=$( cat $MYROOT/$DOMAIN.csv | sed 1d  |grep -Ev 'INFO|OK|LUCKY13' | \
-		grep -Ev 'HSTS|insecure_redirect|DNS_CAArecord|security_headers|OCSP_stapling|LOW|cipherlist_3DES|BEAST_CBC_TLS1' )
+		grep -Ev 'HSTS|insecure_redirect|DNS_CAArecord|security_headers|OCSP_stapling|LOW|cipherlist_3DES|BEAST_CBC_TLS1|potentially VULNERABLE, uses gzip HTTP' )
             if [[ -n $TXT_DOMAIN ]]
             then    STATUS=1
             else    TXT_DOMAIN=ok
