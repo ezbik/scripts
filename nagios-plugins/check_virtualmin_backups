@@ -11,6 +11,13 @@ done
 _check() {
 
 local BACKUP_ID=$1
+
+[ -z "$BACKUP_LOGS" ] && {
+    TXT="backup log folder wasnt detected"
+    CODE=3
+    return 0
+}
+
 ##### way 1.
 
 cd $BACKUP_LOGS/
