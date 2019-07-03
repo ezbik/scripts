@@ -1,6 +1,20 @@
 #!/usr/bin/env python3
 
 # designed to accept `watson log` on stdin and make more cool
+# then create a bash function to overwrite `watson log`
+
+#watson () 
+#{ 
+#    case $1 in 
+#        log)
+#            ~/myenv/bin/watson $@ -j | python3 ~/bin/watson_log.py
+#        ;;
+#        *)
+#            ~/myenv/bin/watson $@
+#        ;;
+#    esac
+#}
+
 
 import sys, json;
 import requests
