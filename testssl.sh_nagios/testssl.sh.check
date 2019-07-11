@@ -21,7 +21,7 @@ function scan_domain() {
 
 local DOMAIN=$1
 
-local SCANCMD="timeout 900 /opt/testssl.sh/testssl.sh --fast --csv --csvfile $MYROOT/$DOMAIN.csv.tmp $DOMAIN"
+local SCANCMD="timeout 900 /opt/testssl.sh/testssl.sh --fast --csvfile $MYROOT/$DOMAIN.csv.tmp $DOMAIN"
 # no cache:
 
         echo "==start scan $DOMAIN to  $MYROOT/$DOMAIN.raw.tmp "
@@ -57,7 +57,7 @@ do
 
 	    SECONDS=$(( `date +%s`-`stat -c %Y $MYROOT/$DOMAIN.raw`)) ;
             TXT+="\n$DOMAIN checked $(show_time $SECONDS) ago:\n$TXT_DOMAIN\n"
-    else    TXT+=" $DOMAIN not found or old status;\n"
+    else    TXT+="\n$DOMAIN not found or old status;\n"
             STATUS=1
     fi
 done

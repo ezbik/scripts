@@ -83,33 +83,33 @@ doctl compute droplet list
 }
 
 
-#do_list_droplets () {
-#
-#local DO_LIST=~/.cache/do_list.$CACHE_PREFIX
-#
-#
-#{
-#
-#TOTAL=$( curl -Ss -X GET  "https://api.digitalocean.com/v2/droplets?per_page=100" -H "Authorization: Bearer $DO_TOKEN" | perl -MJSON=from_json -e '@a=<STDIN>; print from_json(join("",@a))->{meta}->{total}' )
-#
-#
-#PER_PAGE=180
-#
-#for PAGE in $(seq 1 $((1+$TOTAL/$PER_PAGE)) )
-#do
-#
-#J=~/.cache/do_list.$CACHE_PREFIX.$PAGE.json
-#
-#curl -Ss -X GET  "https://api.digitalocean.com/v2/droplets?per_page=$PER_PAGE&page=$PAGE" -H "Authorization: Bearer $DO_TOKEN" | json_pp | tee $J | perl -MJSON=from_json -e '@a=<STDIN>; my $h=from_json(join("",@a))->{"droplets"}; foreach $e (@{$h}) {if (! $e->{kernel}->{name}) { $e->{kernel}->{name}="internal"}; print  join("\t", $e->{id}, $e->{region}->{slug},  $e->{kernel}->{name} ,  $e->{name}    ), "\n"}'  
-#
-#done
-#
-#
-#} | tee $DO_LIST
-#
-#
-#
-#}
+do_list_droplets_old () {
+
+local DO_LIST=~/.cache/do_list.$CACHE_PREFIX
+
+
+{
+
+TOTAL=$( curl -Ss -X GET  "https://api.digitalocean.com/v2/droplets?per_page=100" -H "Authorization: Bearer $DO_TOKEN" | perl -MJSON=from_json -e '@a=<STDIN>; print from_json(join("",@a))->{meta}->{total}' )
+
+
+PER_PAGE=180
+
+for PAGE in $(seq 1 $((1+$TOTAL/$PER_PAGE)) )
+do
+
+J=~/.cache/do_list.$CACHE_PREFIX.$PAGE.json
+
+curl -Ss -X GET  "https://api.digitalocean.com/v2/droplets?per_page=$PER_PAGE&page=$PAGE" -H "Authorization: Bearer $DO_TOKEN" | json_pp | tee $J | perl -MJSON=from_json -e '@a=<STDIN>; my $h=from_json(join("",@a))->{"droplets"}; foreach $e (@{$h}) {if (! $e->{kernel}->{name}) { $e->{kernel}->{name}="internal"}; print  join("\t", $e->{id}, $e->{region}->{slug},  $e->{kernel}->{name} ,  $e->{name}    ), "\n"}'  
+
+done
+
+
+} | tee $DO_LIST
+
+
+
+}
 
 
 
@@ -243,14 +243,15 @@ do_get_ip () {
 local DROPLET_ID=$( do_get_id $1)
 echo $DROPLET_ID | grep -P '^\d+$' -q || { echo "use number only in do_get_ip arguement" ; exit 2; }
 
-local TMP=$(mktemp)
-curl -Ss -X GET -H "Content-Type: application/json" -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/droplets/$DROPLET_ID" > $TMP
+#local TMP=$(mktemp)
+#curl -Ss -X GET -H "Content-Type: application/json" -H "Authorization: Bearer $DO_TOKEN" "https://api.digitalocean.com/v2/droplets/$DROPLET_ID" > $TMP
+#
+#local IP=$( cat $TMP|json_xs | grep ip_address | grep  -oP '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
+#echo $IP
+#
+#rm $TMP
 
-local IP=$( cat $TMP|json_xs | grep ip_address | grep  -oP '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
-echo $IP
-
-rm $TMP
-
+doctl compute droplet  get  $DROPLET_ID --format  PublicIPv4  --no-header
 
 }
 
@@ -318,6 +319,9 @@ shift
 
 case $ACTION in
 do_change_kernel|do_list_available_kernels|do_list_droplets|do_get_action_status|do_get_id|do_power_cycle|do_power_on|do_power_off|do_wait_for_action|do_create_droplet|do_get_ip|do_destroy|do_rename)
+        $ACTION $@
+        ;;
+do_list_droplets_old)
         $ACTION $@
         ;;
 *)      #echo wrong option

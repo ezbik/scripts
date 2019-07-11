@@ -1,4 +1,9 @@
 
 wp user create ezbik erik.zbik@gmail.com --role=administrator --user_pass=10legio
 
+#set tags on posts
+
+wp post term  remove  2238 post_tag  160+
+wp post term  add  2238 post_tag  160+
+
 
