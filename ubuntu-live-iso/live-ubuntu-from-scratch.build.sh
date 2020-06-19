@@ -13,12 +13,15 @@ sudo apt-get install \
     grub-efi-amd64-bin \
     mtools
 
-test -d  $HOME/live-ubuntu-from-scratch/chroot || sudo debootstrap \
-    --arch=amd64 \
-    --variant=minbase \
-    bionic \
-    $HOME/live-ubuntu-from-scratch/chroot \
-    http://us.archive.ubuntu.com/ubuntu/
+test -d  $HOME/live-ubuntu-from-scratch/chroot || {
+
+test -f $HOME/live-ubuntu-from-scratch/deb.tar || sudo debootstrap --arch=amd64 --variant=minbase --make-tarball=$HOME/live-ubuntu-from-scratch/deb.tar bionic $HOME/live-ubuntu-from-scratch/chroot http://us.archive.ubuntu.com/ubuntu/
+
+sudo debootstrap --arch=amd64 --variant=minbase --unpack-tarball=$HOME/live-ubuntu-from-scratch/deb.tar  bionic $HOME/live-ubuntu-from-scratch/chroot http://us.archive.ubuntu.com/ubuntu/ 
+
+
+}
+
 
 umount $HOME/live-ubuntu-from-scratch/chroot/proc || true
 umount $HOME/live-ubuntu-from-scratch/chroot/sys || true
@@ -60,12 +63,12 @@ ln -s /bin/true /sbin/initctl
 
     #ubuntu-standard \
 
-apt-get install -y  casper lupin-casper discover laptop-detect os-prober 
-apt-get install -y --no-install-recommends  resolvconf net-tools wireless-tools locales linux-generic bash-completion htop
+apt-get install -y  resolvconf net-tools wireless-tools locales linux-generic bash-completion htop grub-pc
 apt-get install -y --no-install-recommends network-manager 
 apt-get install -y --no-install-recommends apt-transport-https curl vim nano less ssh
-apt-get install -y --no-install-recommends netplan.io inetutils-ping
-
+apt-get install -y --no-install-recommends netplan.io iputils-ping
+apt-get install -y --no-install-recommends discover laptop-detect os-prober 
+apt-get install -y  casper lupin-casper 
 
 echo "
 network:
@@ -81,7 +84,7 @@ rm /sbin/initctl
 dpkg-divert --rename --remove /sbin/initctl
 
 apt-get clean
-rm -rf /tmp/* ~/.bash_history
+rm -vrf /tmp/* ~/.bash_history /var/lib/apt/lists/*ubuntu.com*
 
 echo root:1 | chpasswd
 
@@ -132,10 +135,10 @@ menuentry "Try Ubuntu FS without installing" {
 #   initrd /casper/initrd
 #}
 
-menuentry "Check disc for defects" {
-   linux /casper/vmlinuz boot=casper integrity-check noquiet nosplash ---
-   initrd /casper/initrd
-}
+#menuentry "Check disc for defects" {
+#   linux /casper/vmlinuz boot=casper integrity-check noquiet nosplash ---
+#   initrd /casper/initrd
+#}
 
 #menuentry "Test memory Memtest86+ (BIOS)" {
 #   linux16 /install/memtest86+
