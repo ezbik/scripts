@@ -11,13 +11,14 @@ sudo apt-get install \
     xorriso \
     grub-pc-bin \
     grub-efi-amd64-bin \
-    mtools
+    mtools \
+    p7zip-full
 
 test -d  $HOME/live-ubuntu-from-scratch/chroot || {
 
-test -f $HOME/live-ubuntu-from-scratch/deb.tar || sudo debootstrap --arch=amd64 --variant=minbase --make-tarball=$HOME/live-ubuntu-from-scratch/deb.tar bionic $HOME/live-ubuntu-from-scratch/chroot http://us.archive.ubuntu.com/ubuntu/
+test -f $HOME/live-ubuntu-from-scratch/deb.tar || sudo debootstrap --arch=amd64 --variant=minbase --make-tarball=$HOME/live-ubuntu-from-scratch/deb.tar focal $HOME/live-ubuntu-from-scratch/chroot http://us.archive.ubuntu.com/ubuntu/
 
-sudo debootstrap --arch=amd64 --variant=minbase --unpack-tarball=$HOME/live-ubuntu-from-scratch/deb.tar  bionic $HOME/live-ubuntu-from-scratch/chroot http://us.archive.ubuntu.com/ubuntu/ 
+sudo debootstrap --arch=amd64 --variant=minbase --unpack-tarball=$HOME/live-ubuntu-from-scratch/deb.tar  focal $HOME/live-ubuntu-from-scratch/chroot http://us.archive.ubuntu.com/ubuntu/ 
 
 
 }
@@ -48,9 +49,9 @@ export LC_ALL=C
 echo "ubuntu-fs-live" > /etc/hostname
 
 echo "
-deb http://us.archive.ubuntu.com/ubuntu/ bionic main restricted universe multiverse
-deb http://us.archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse
-deb http://us.archive.ubuntu.com/ubuntu/ bionic-security main restricted universe multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse
+deb http://us.archive.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse
 "> /etc/apt/sources.list
 apt-get update
 apt-get install -y systemd-sysv
@@ -63,11 +64,11 @@ ln -s /bin/true /sbin/initctl
 
     #ubuntu-standard \
 
-apt-get install -y  resolvconf net-tools wireless-tools locales linux-generic bash-completion htop grub-pc
+apt-get install -y  resolvconf net-tools wireless-tools locales linux-generic bash-completion htop grub-pc lsb-release
 apt-get install -y --no-install-recommends network-manager 
 apt-get install -y --no-install-recommends apt-transport-https curl vim nano less ssh
 apt-get install -y --no-install-recommends netplan.io iputils-ping
-apt-get install -y --no-install-recommends discover laptop-detect os-prober 
+apt-get install -y --no-install-recommends discover laptop-detect os-prober openssl
 apt-get install -y  casper lupin-casper 
 
 echo "
@@ -87,6 +88,9 @@ apt-get clean
 rm -vrf /tmp/* ~/.bash_history /var/lib/apt/lists/*ubuntu.com*
 
 echo root:1 | chpasswd
+grep --color -q ^PermitRootLogin /etc/ssh/sshd_config && sed -i "s@^PermitRootLogin.*@PermitRootLogin yes@" /etc/ssh/sshd_config || sed -i "/LogLevel/a PermitRootLogin yes" /etc/ssh/sshd_config;
+sed -i "s@^PasswordAuthentication.*@PasswordAuthentication yes@" /etc/ssh/sshd_config;
+
 
 export HISTSIZE=0
 exit
@@ -223,6 +227,35 @@ printf $(sudo du -sx --block-size=1 chroot | cut -f1) > image/casper/filesystem.
 
 cd image 
 find . -type f -print0 | xargs -0 md5sum | grep -v "\./md5sum.txt" > md5sum.txt 
+
+
+sudo xorriso \
+    -as mkisofs \
+    -iso-level 3 \
+    -full-iso9660-filenames \
+    -volid "Ubuntu from scratch" \
+    -eltorito-boot boot/grub/bios.img \
+    -no-emul-boot \
+    -boot-load-size 4 \
+    -boot-info-table \
+    --eltorito-catalog boot/grub/boot.cat \
+    --grub2-boot-info \
+    --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img \
+    -eltorito-alt-boot \
+    -e EFI/efiboot.img \
+    -no-emul-boot \
+    -append_partition 2 0xef isolinux/efiboot.img \
+    -output "../ubuntu-from-scratch.iso" \
+    -graft-points \
+     .  \
+    /boot/grub/bios.img=isolinux/bios.img \
+    /EFI/efiboot.img=isolinux/efiboot.img
+
+
+sed -i /bios.img/d md5sum.txt
+B_MD5=$( 7z -aoa e ../ubuntu-from-scratch.iso isolinux/bios.img &>/dev/null ; md5sum bios.img | grep bios.img |cut -d\   -f1  ; rm bios.img )
+echo "$B_MD5  ./isolinux/bios.img" >> md5sum.txt
+
 
 sudo xorriso \
     -as mkisofs \
