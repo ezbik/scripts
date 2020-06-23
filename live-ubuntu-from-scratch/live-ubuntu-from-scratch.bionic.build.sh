@@ -11,7 +11,8 @@ sudo apt-get install \
     xorriso \
     grub-pc-bin \
     grub-efi-amd64-bin \
-    mtools
+    mtools \
+    p7zip-full
 
 test -d  $HOME/live-ubuntu-from-scratch/chroot || {
 
@@ -248,6 +249,55 @@ sudo xorriso \
      .  \
     /boot/grub/bios.img=isolinux/bios.img \
     /EFI/efiboot.img=isolinux/efiboot.img
+
+sudo xorriso \
+    -as mkisofs \
+    -iso-level 3 \
+    -full-iso9660-filenames \
+    -volid "Ubuntu from scratch" \
+    -eltorito-boot boot/grub/bios.img \
+    -no-emul-boot \
+    -boot-load-size 4 \
+    -boot-info-table \
+    --eltorito-catalog boot/grub/boot.cat \
+    --grub2-boot-info \
+    --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img \
+    -eltorito-alt-boot \
+    -e EFI/efiboot.img \
+    -no-emul-boot \
+    -append_partition 2 0xef isolinux/efiboot.img \
+    -output "../ubuntu-from-scratch.iso" \
+    -graft-points \
+     .  \
+    /boot/grub/bios.img=isolinux/bios.img \
+    /EFI/efiboot.img=isolinux/efiboot.img
+
+
+sed -i /bios.img/d md5sum.txt
+B_MD5=$( 7z -aoa e ../ubuntu-from-scratch.iso isolinux/bios.img &>/dev/null ; md5sum bios.img | grep bios.img |cut -d\   -f1  ; rm bios.img )
+echo "$B_MD5  ./isolinux/bios.img" >> md5sum.txt
+sudo xorriso \
+    -as mkisofs \
+    -iso-level 3 \
+    -full-iso9660-filenames \
+    -volid "Ubuntu from scratch" \
+    -eltorito-boot boot/grub/bios.img \
+    -no-emul-boot \
+    -boot-load-size 4 \
+    -boot-info-table \
+    --eltorito-catalog boot/grub/boot.cat \
+    --grub2-boot-info \
+    --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img \
+    -eltorito-alt-boot \
+    -e EFI/efiboot.img \
+    -no-emul-boot \
+    -append_partition 2 0xef isolinux/efiboot.img \
+    -output "../ubuntu-from-scratch.iso" \
+    -graft-points \
+     .  \
+    /boot/grub/bios.img=isolinux/bios.img \
+    /EFI/efiboot.img=isolinux/efiboot.img
+
 
 du -h "../ubuntu-from-scratch.iso"
 
