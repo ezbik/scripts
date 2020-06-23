@@ -130,7 +130,7 @@ set default="0"
 set timeout=30
 
 menuentry "Try Ubuntu FS without installing" {
-   linux /casper/vmlinuz boot=casper noquiet nosplash ---
+   linux /casper/vmlinuz boot=casper noquiet nosplash persistent ---
    initrd /casper/initrd
 }
 
@@ -139,10 +139,10 @@ menuentry "Try Ubuntu FS without installing" {
 #   initrd /casper/initrd
 #}
 
-#menuentry "Check disc for defects" {
-#   linux /casper/vmlinuz boot=casper integrity-check noquiet nosplash ---
-#   initrd /casper/initrd
-#}
+menuentry "Check disc for defects" {
+   linux /casper/vmlinuz boot=casper integrity-check noquiet nosplash ---
+   initrd /casper/initrd
+}
 
 #menuentry "Test memory Memtest86+ (BIOS)" {
 #   linux16 /install/memtest86+
@@ -227,28 +227,6 @@ printf $(sudo du -sx --block-size=1 chroot | cut -f1) > image/casper/filesystem.
 
 cd image 
 find . -type f -print0 | xargs -0 md5sum | grep -v "\./md5sum.txt" > md5sum.txt 
-
-sudo xorriso \
-    -as mkisofs \
-    -iso-level 3 \
-    -full-iso9660-filenames \
-    -volid "Ubuntu from scratch" \
-    -eltorito-boot boot/grub/bios.img \
-    -no-emul-boot \
-    -boot-load-size 4 \
-    -boot-info-table \
-    --eltorito-catalog boot/grub/boot.cat \
-    --grub2-boot-info \
-    --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img \
-    -eltorito-alt-boot \
-    -e EFI/efiboot.img \
-    -no-emul-boot \
-    -append_partition 2 0xef isolinux/efiboot.img \
-    -output "../ubuntu-from-scratch.iso" \
-    -graft-points \
-     .  \
-    /boot/grub/bios.img=isolinux/bios.img \
-    /EFI/efiboot.img=isolinux/efiboot.img
 
 mk_iso() {
 sudo xorriso \
