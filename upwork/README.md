@@ -3,7 +3,7 @@ Upwork CSV parser
 
 Sample usage:
 
-` upwork.statement.analyze ~/bel.ip/upwork/statements/statements_2020-07-01_2020-07-31.csv`
+` upwork.statement.analyze ./statements_2020-07-01_2020-07-31.csv`
 
 Output:
 
