@@ -1,10 +1,16 @@
+#!/bin/bash
 
 set -x
 set -e
 
+if [[ `id -u ` != 0 ]]
+then    echo run me as root
+        exit 22
+fi
+
 mkdir $HOME/live-ubuntu-from-scratch -p
 
-sudo apt-get install \
+sudo apt-get install -y \
     binutils \
     debootstrap \
     squashfs-tools \
@@ -64,12 +70,25 @@ ln -s /bin/true /sbin/initctl
 
     #ubuntu-standard \
 
+
+export DEBIAN_FRONTEND=noninteractive 
 apt-get install -y  resolvconf net-tools wireless-tools locales linux-generic bash-completion htop grub-pc lsb-release
 apt-get install -y --no-install-recommends network-manager 
 apt-get install -y --no-install-recommends apt-transport-https curl vim nano less ssh
 apt-get install -y --no-install-recommends netplan.io iputils-ping
 apt-get install -y --no-install-recommends discover laptop-detect os-prober openssl
+apt-get install -y sudo
+# install your packages here.. start
+# apt-get install -y PKG01
+# install your packages here.. end
+apt-get install -y iptables
 apt-get install -y  casper lupin-casper 
+
+apt-get -y dist-upgrade
+
+##prevent dump ,,Eject Media & Press ENTER"" message
+systemctl mask casper.service
+
 
 echo "
 network:
@@ -94,9 +113,9 @@ sed -i "s@^PasswordAuthentication.*@PasswordAuthentication yes@" /etc/ssh/sshd_c
 
 export HISTSIZE=0
 exit
-####### CHROOT stop!! }
 
 '
+####### CHROOT stop!! }
 
 umount $HOME/live-ubuntu-from-scratch/chroot/proc
 umount $HOME/live-ubuntu-from-scratch/chroot/sys
@@ -127,19 +146,24 @@ search --set=root --file /ubuntu
 insmod all_video
 
 set default="0"
-set timeout=30
 
-menuentry "Try Ubuntu FS without installing" {
+##some delay:
+#set timeout=5
+
+##no delay:
+set timeout=0
+
+menuentry "Try Ubuntu without installing" {
    linux /casper/vmlinuz boot=casper noquiet nosplash persistent ---
    initrd /casper/initrd
 }
 
-#menuentry "Install Ubuntu FS" {
+#menuentry "Install Ubuntu" {
 #   linux /casper/vmlinuz boot=casper only-ubiquity quiet splash ---
 #   initrd /casper/initrd
 #}
 
-menuentry "Check disc for defects" {
+menuentry "Check disk for defects" {
    linux /casper/vmlinuz boot=casper integrity-check noquiet nosplash ---
    initrd /casper/initrd
 }
@@ -255,12 +279,13 @@ sudo xorriso \
 
 mk_iso
 
+####WE ARE IN image 
 sed -i /bios.img/d md5sum.txt
-B_MD5=$( 7z -aoa e ../ubuntu-from-scratch.iso isolinux/bios.img &>/dev/null ; md5sum bios.img | grep bios.img |cut -d\   -f1  ; rm bios.img )
+B_MD5=$( 7z -aoa e ../ubuntu-from-scratch.bionic.iso isolinux/bios.img &>/dev/null ; md5sum bios.img | grep bios.img |cut -d\   -f1  ; rm bios.img )
 echo "$B_MD5  ./isolinux/bios.img" >> md5sum.txt
 
 mk_iso
 
-du -h "../ubuntu-from-scratch.bionic.iso"
+du -h $( readlink -f ../ubuntu-from-scratch.bionic.iso )
 
 ######### pack end
