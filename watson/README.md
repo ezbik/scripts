@@ -5,10 +5,13 @@
 This wrapper is designed to accept `watson log` on stdin and make it more cool & detailed:
 
 Sample usage:
+
            `~/bin/watson log -j  | python3 ~/bin/watson_log.py`
 
    where
+
   ` ~/bin/watson`            orig watson script
+
   ` ~/bin/watson_log.py`     this script.
 
    Output:
