@@ -1,0 +1,23 @@
+desired_interface="__IFACE__"
+desired_default_route=__GW__
+cgroup_name="cgproxy__N__"
+net_cls_classid="0x001000__N__"
+ip_table_fwmark="1000__N__"
+ip_table_number="1__N__"
+ip_table_name="$cgroup_name"
+
+# exit if NIC doesn't exist:
+test -f /proc/sys/net/ipv4/conf/$desired_interface/rp_filter || { echo device $desired_interface not found; exit 2; }
+
+test_networking () { 
+#ping -c2 8.8.8.8 #|| exit
+:
+}
+
+post_up () {
+
+    ip ro show tab "$ip_table_name" | grep prohibit -q || ip route add  prohibit   default metric 500  tab "$ip_table_name"
+
+
+}
+
