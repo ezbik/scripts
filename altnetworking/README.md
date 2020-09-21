@@ -3,13 +3,16 @@
 
 
 
-Based on https://gist.github.com/level323/54a921216f0baaa163127d960bfebbf0
+Based on https://gist.github.com/level323/54a921216f0baaa163127d960bfebbf0 and https://gist.github.com/bparker06/e1c04bd8d1f4f52165d64e338adbb275
+
 
 Prereqs:
 
     apt install cgroupfs-mount  cgroup-tools inetutils-traceroute
 
 Assign IP to an interface `eth222`; 
+
+
 Copy `namespace.template` to `namespace.1`
 Edit `namespace.1`, change `__N__` to 1 ;  `__IFACE__` to `eth222` ; `__GW__` to custom gateway;
 
