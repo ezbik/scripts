@@ -118,17 +118,17 @@ fi
 shift
 
 while [ "$#" -gt 0 ]; do
-  case "$1" in
-    -b|--background) background=true; shift 1;;
-    -l|--list) action="list"; shift 1;;
-    -s|--skip) skip=true; shift 1;;
-    -c|--clean) action="clean"; shift 1;;
-    -h|--help) action="help"; shift 1;;
-    -v|--version) echo "altnetworking.sh v$VERSION"; exit 0;;
-    -u|--user) RUNAS=$2; shift 2;;
-    -*) echo "Unknown option: $1. Try --help." >&2; exit 1;;
-    *) break;; # Start of COMMAND or LIST
-  esac
+	case "$1" in
+		-b|--background) background=true; shift 1;;
+		-l|--list) action="list"; shift 1;;
+		-s|--skip) skip=true; shift 1;;
+		-c|--clean) action="clean"; shift 1;;
+		-h|--help) action="help"; shift 1;;
+		-v|--version) echo "altnetworking.sh v$VERSION"; exit 0;;
+		-u|--user) RUNAS=$2; shift 2;;
+		-*) echo "Unknown option: $1. Try --help." >&2; exit 1;;
+		*) break;; # Start of COMMAND or LIST
+	esac
 done
 
 # Respond to --help
@@ -302,15 +302,15 @@ if [ "$action" = "command" ]; then
 	fi
 	if [ ! -z "$RUNAS" ]
 	then
-      SCRIPT="sudo -u $RUNAS $@"
-   else
-      SCRIPT="$@"
-   fi
+		SCRIPT="sudo -u $RUNAS $@"
+	else
+		SCRIPT="$@"
+	fi
 	if [ ! -z "$resolv_conf" ]
 	then
-      # https://serverfault.com/a/762738
-      SCRIPT="unshare --mount bash -c \"mount --bind $resolv_conf /etc/resolv.conf;$SCRIPT\""
-   fi
+		# https://serverfault.com/a/762738
+		SCRIPT="unshare --mount bash -c \"mount --bind $resolv_conf /etc/resolv.conf;$SCRIPT\""
+	fi
 	if [ "$background" = true ]; then
 		eval cgexec -g net_cls:"$cgroup_name" "$SCRIPT" &>/dev/null &
 		exit 0
