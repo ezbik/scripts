@@ -306,6 +306,11 @@ if [ "$action" = "command" ]; then
    else
       SCRIPT="$@"
    fi
+	if [ ! -z "$resolv_conf" ]
+	then
+      # https://serverfault.com/a/762738
+      SCRIPT="unshare --mount bash -c \"mount --bind $resolv_conf /etc/resolv.conf;$SCRIPT\""
+   fi
 	if [ "$background" = true ]; then
 		eval cgexec -g net_cls:"$cgroup_name" "$SCRIPT" &>/dev/null &
 		exit 0
