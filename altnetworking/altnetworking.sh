@@ -87,7 +87,7 @@ action="command"
 background=false
 skip=false
 init_nb_args="$#"
-
+RUNAS=""
 
 show_help() {
         me=`basename "$0"`
@@ -102,6 +102,7 @@ show_help() {
                      run \e[4mCOMMAND\e[24m even if network connectivity tests fail."
         echo -e "\e[1m-c, --clean\e[0m         Terminate all proceses inside cgroup and remove system config."
         echo -e "\e[1m-v, --version\e[0m       Print this program version."
+        echo -e "\e[1m-u, --user USER\e[0m     Run as user USER."
         echo -e "\e[1m-h, --help\e[0m          This help."
 }
 
@@ -124,6 +125,7 @@ while [ "$#" -gt 0 ]; do
     -c|--clean) action="clean"; shift 1;;
     -h|--help) action="help"; shift 1;;
     -v|--version) echo "altnetworking.sh v$VERSION"; exit 0;;
+    -u|--user) RUNAS=$2; shift 2;;
     -*) echo "Unknown option: $1. Try --help." >&2; exit 1;;
     *) break;; # Start of COMMAND or LIST
   esac
@@ -298,11 +300,17 @@ if [ "$action" = "command" ]; then
 		echo "Error: COMMAND not provided." >&2
 		exit 1
 	fi
+	if [ ! -z "$RUNAS" ]
+	then
+      SCRIPT="sudo -u $RUNAS $@"
+   else
+      SCRIPT="$@"
+   fi
 	if [ "$background" = true ]; then
-		cgexec -g net_cls:"$cgroup_name" "$@" &>/dev/null &
+		eval cgexec -g net_cls:"$cgroup_name" "$SCRIPT" &>/dev/null &
 		exit 0
 	else
-		cgexec -g net_cls:"$cgroup_name" "$@"
+		eval cgexec -g net_cls:"$cgroup_name" "$SCRIPT"
 		exit $?
 	fi
 
