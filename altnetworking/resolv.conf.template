@@ -1,0 +1,3 @@
+# template for DNS resolution
+# replace 192.168.1.1 by the DNS server
+nameserver 192.168.1.1

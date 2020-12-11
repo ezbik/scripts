@@ -34,20 +34,20 @@ VERSION="0.1.0"
 #       e.g. desired_default_route=`ip route | grep "dev ${desired_interface}" | awk '/^default/ { print $3 }'`
 # 3. The name for the cgroup we're going to create
 #       Note: Better keep it with purely lowercase alphabetic & underscore
-#       e.g. cgroup_name="vpntinclpgmtwireless" 
+#       e.g. cgroup_name="vpntinclpgmtwireless"
 # 4. The classid we're going to use for this cgroup
 #       Note: Anything from 0x00000001 to 0xFFFFFFFF (just needs to be unique)
-#       e.g. net_cls_classid="0x00110011" 
+#       e.g. net_cls_classid="0x00110011"
 # 5. The mark we're going to put on packets originating from this app/cgroup
 #       Note: Anything from 1 to 2147483647
 #       e.g. ip_table_fwmark="11"
 # 6. The Routing table number we'll associate with packets on this cgroup
 #       Note: Anything from 1 to 252 (just needs to be unique)
-#       e.g. ip_table_number="11" 
+#       e.g. ip_table_number="11"
 # 7. The routing table name we're going to use to formulate the full routing table name
 #       Note: Needs to be unique. Best to use cgroup name
 #       e.g. ip_table_name="$cgroup_name"
-# 8. Define a post_up() function that will be called after everything about 
+# 8. Define a post_up() function that will be called after everything about
 #       the cgroup is set up (including default route)
 #       Use it to create additional needed routes and/or iptables entries
 #       e,g post_up(){
@@ -64,7 +64,7 @@ VERSION="0.1.0"
 #            }
 #
 # 10 Define the test_networking() function that will carry out tests to confirm that the
-#       networking environment that has been created is functioning properly. It should return 0 if 
+#       networking environment that has been created is functioning properly. It should return 0 if
 #       networking is functioning correctly or 1 otherwise. If returning 0, set testresult=true else
 #       set it to false
 #       e.g. test_networking(){
@@ -76,7 +76,7 @@ VERSION="0.1.0"
 
 # === CODE ===
 
-set -u 
+set -u
 
 # Some defaults
 force=false
@@ -87,7 +87,7 @@ action="command"
 background=false
 skip=false
 init_nb_args="$#"
-
+RUNAS=""
 
 show_help() {
         me=`basename "$0"`
@@ -102,6 +102,7 @@ show_help() {
                      run \e[4mCOMMAND\e[24m even if network connectivity tests fail."
         echo -e "\e[1m-c, --clean\e[0m         Terminate all proceses inside cgroup and remove system config."
         echo -e "\e[1m-v, --version\e[0m       Print this program version."
+        echo -e "\e[1m-u, --user USER\e[0m     Run as user USER."
         echo -e "\e[1m-h, --help\e[0m          This help."
 }
 
@@ -117,16 +118,17 @@ fi
 shift
 
 while [ "$#" -gt 0 ]; do
-  case "$1" in
-    -b|--background) background=true; shift 1;;
-    -l|--list) action="list"; shift 1;;
-    -s|--skip) skip=true; shift 1;;
-    -l|--clean) action="clean"; shift 1;;
-    -h|--help) action="help"; shift 1;;
-    -v|--version) echo "altnetworking.sh v$VERSION"; exit 0;;
-    -*) echo "Unknown option: $1. Try --help." >&2; exit 1;;
-    *) break;; # Start of COMMAND or LIST
-  esac
+	case "$1" in
+		-b|--background) background=true; shift 1;;
+		-l|--list) action="list"; shift 1;;
+		-s|--skip) skip=true; shift 1;;
+		-c|--clean) action="clean"; shift 1;;
+		-h|--help) action="help"; shift 1;;
+		-v|--version) echo "altnetworking.sh v$VERSION"; exit 0;;
+		-u|--user) RUNAS=$2; shift 2;;
+		-*) echo "Unknown option: $1. Try --help." >&2; exit 1;;
+		*) break;; # Start of COMMAND or LIST
+	esac
 done
 
 # Respond to --help
@@ -217,7 +219,7 @@ cd iptables-1.6.0
 && make install
 iptables --version\e[0m" >&2
 			exit 1
-		fi		
+		fi
 
 		if [ ! -d "/sys/fs/cgroup/net_cls/$cgroup_name" ]; then
 			echo "Creating net_cls control group $cgroup_name" >&2
@@ -298,11 +300,22 @@ if [ "$action" = "command" ]; then
 		echo "Error: COMMAND not provided." >&2
 		exit 1
 	fi
+	if [ ! -z "$RUNAS" ]
+	then
+		SCRIPT="sudo -u $RUNAS $@"
+	else
+		SCRIPT="$@"
+	fi
+	if [ ! -z "$resolv_conf" ]
+	then
+		# https://serverfault.com/a/762738
+		SCRIPT="unshare --mount bash -c \"mount --bind $resolv_conf /etc/resolv.conf;$SCRIPT\""
+	fi
 	if [ "$background" = true ]; then
-		cgexec -g net_cls:"$cgroup_name" "$@" &>/dev/null &
+		eval cgexec -g net_cls:"$cgroup_name" "$SCRIPT" &>/dev/null &
 		exit 0
 	else
-		cgexec -g net_cls:"$cgroup_name" "$@"
+		eval cgexec -g net_cls:"$cgroup_name" "$SCRIPT"
 		exit $?
 	fi
 
@@ -327,7 +340,7 @@ elif [ "$action" = "clean" ]; then
 
 	# Run custom pre_down function
 	pre_down
-	
+
 	# Delete cgroup
 	if [ -d "/sys/fs/cgroup/net_cls/${cgroup_name}" ]; then
 		find "/sys/fs/cgroup/net_cls/${cgroup_name}" -depth -type d -print -exec rmdir {} \;
@@ -339,11 +352,11 @@ elif [ "$action" = "clean" ]; then
 
 	iptables -t mangle -D OUTPUT -m cgroup --cgroup "$net_cls_classid" -j MARK --set-mark "$ip_table_fwmark"
 	iptables -t nat -D POSTROUTING -m cgroup --cgroup "$net_cls_classid" -o "$desired_interface" -j MASQUERADE
-    iptables -D OUTPUT -m cgroup --cgroup "$net_cls_classid" ! -o "$desired_interface" -j REJECT 
+    iptables -D OUTPUT -m cgroup --cgroup "$net_cls_classid" ! -o "$desired_interface" -j REJECT
 
-	ip rule del fwmark "$ip_table_fwmark" table "$ip_table_name"	
+	ip rule del fwmark "$ip_table_fwmark" table "$ip_table_name"
 	ip route del default table "$ip_table_name"
-        
+
 	sed -i '/^${ip_table_number}\s\+${ip_table_name}\s*$/d' /etc/iproute2/rt_tables
 
 	if [ -n "`lscgroup net_cls:$cgroup_name`" ]; then
