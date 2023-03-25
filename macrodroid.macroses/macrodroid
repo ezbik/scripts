@@ -1,0 +1,79 @@
+
+disable battery restrictions/optimization for:
+        macrodroid
+        k9mail
+        termux
+
+screen lock => off , display timeout 15 sec
+
+
+
+PERMS:
+    Fingerprint gesture detector
+    UI interaction
+
+Trigger
+    macrodroid init
+Action:
+    launch termux
+
+
+
+---------
+
+
+
+###     ip change
+
+sound Y
+AP on
+wait 5 sec
+AP off
+sound Y
+
+
+--------- read mail notifications
+
+
+install K9
+    subscribe to mailbox
+    enable Notifications for new mail, disable Notifications for 'getting mail'
+    background autosync - always
+    mailbox =>  PUSH check      :   ON
+                IDLE interval   :   1minute
+    
+
+Macrodroid:
+
+- setup global var, imei=999999999999999999
+
+Trigger:
+    Notification for K9mail
+    Text kekus[v=imei]
+Action
+    ...
+
+
+trigger:
+    Macrodroid init
+    Run K9
+
+
+    
+
+
+-------- 
+
+add local var, volume
+
+catch intent
+    intent name: zcom.arlosoft.macrodroid.kekus
+    extra: name: volume
+            field: *
+    save to var: volume
+
+
+Send intent:
+
+    am broadcast --user 0 -a zcom.arlosoft.macrodroid.kekus  -e volume 119
+

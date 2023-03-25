@@ -240,7 +240,7 @@ usage() {
     get_lish_cmd    LABEL|HOSTNAME
     reboot_to_rescue    LINODEID|LABEL|HOSTNAME
     wait_for_jobs       LINODEID|LABEL|HOSTNAME
-    showstatus          LABEL|HOSTNAME
+    showstatus          LABEL
 "
 
 }

@@ -140,6 +140,8 @@ fi
 
 # Check the presence of required system packages
 check_package(){
+return 1
+# ^^ no need to check
 	nothing_installed=1
 	for package_name in "$@"
 	do
@@ -167,13 +169,13 @@ list_processes(){
 # Check and setup iptables - requires root even for check
 iptable_checked=false
 setup_iptables(){
-	if ! iptables -t mangle -C OUTPUT -m cgroup --cgroup "$net_cls_classid" -j MARK --set-mark "$ip_table_fwmark" 2>/dev/null; then
+	if ! iptables -w -t mangle -C OUTPUT -m cgroup --cgroup "$net_cls_classid" -j MARK --set-mark "$ip_table_fwmark" 1>/dev/null 2>/dev/null; then
 		echo "Adding iptables MANGLE rule to set firewall mark $ip_table_fwmark on packets with class identifier $net_cls_classid" >&2
-		iptables -t mangle -A OUTPUT -m cgroup --cgroup "$net_cls_classid" -j MARK --set-mark "$ip_table_fwmark"
+		iptables -w -t mangle -A OUTPUT -m cgroup --cgroup "$net_cls_classid" -j MARK --set-mark "$ip_table_fwmark" || exit 2
 	fi
-	if ! iptables -t nat -C POSTROUTING -m cgroup --cgroup "$net_cls_classid" -o "$desired_interface" -j MASQUERADE 2>/dev/null; then
+	if ! iptables -w -t nat -C POSTROUTING -m cgroup --cgroup "$net_cls_classid" -o "$desired_interface" -j MASQUERADE 1>/dev/null 2>/dev/null; then
 		echo "Adding iptables NAT rule force the packets with class identifier $net_cls_classid to exit through $desired_interface" >&2
-		iptables -t nat -A POSTROUTING -m cgroup --cgroup "$net_cls_classid" -o "$desired_interface" -j MASQUERADE
+		iptables -w -t nat -A POSTROUTING -m cgroup --cgroup "$net_cls_classid" -o "$desired_interface" -j MASQUERADE || exit 2
 	fi
 
 	iptable_checked=true
@@ -337,9 +339,9 @@ elif [ "$action" = "clean" ]; then
 	#echo 1 | tee "/proc/sys/net/ipv4/conf/all/rp_filter" > /dev/null
 	#echo 1 | tee "/proc/sys/net/ipv4/conf/${desired_interface}/rp_filter" > /dev/null
 
-	iptables -t mangle -D OUTPUT -m cgroup --cgroup "$net_cls_classid" -j MARK --set-mark "$ip_table_fwmark"
-	iptables -t nat -D POSTROUTING -m cgroup --cgroup "$net_cls_classid" -o "$desired_interface" -j MASQUERADE
-    iptables -D OUTPUT -m cgroup --cgroup "$net_cls_classid" ! -o "$desired_interface" -j REJECT 
+	iptables -w -t mangle -D OUTPUT -m cgroup --cgroup "$net_cls_classid" -j MARK --set-mark "$ip_table_fwmark"
+	iptables -w -t nat -D POSTROUTING -m cgroup --cgroup "$net_cls_classid" -o "$desired_interface" -j MASQUERADE
+    iptables -w -D OUTPUT -m cgroup --cgroup "$net_cls_classid" ! -o "$desired_interface" -j REJECT 
 
 	ip rule del fwmark "$ip_table_fwmark" table "$ip_table_name"	
 	ip route del default table "$ip_table_name"
