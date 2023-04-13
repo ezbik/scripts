@@ -101,8 +101,6 @@ _usbtree() {
         } |  sed "s@^@  @"
     done    
 
-#    usbtree | jq '.[]|select(.USB_ID=="/sys/bus/usb/devices/1-1.6.4.4")'
-
     rm -f $SCSI_MAP
 }
 
