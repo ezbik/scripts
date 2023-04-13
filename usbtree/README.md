@@ -8,7 +8,10 @@
 - Designed mainly for checking statuses of 4G modems.
 
 
-also check https://github.com/tuna-f1sh/cyme
+also check
+
+-  https://github.com/tuna-f1sh/cyme
+- https://kellyjonbrazil.github.io/jc/docs/parsers/lsusb
 
 ### Prereqs:
 
