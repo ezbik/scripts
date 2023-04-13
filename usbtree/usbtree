@@ -1,0 +1,109 @@
+#!/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# vim: filetype=bash
+
+
+usbtree() {
+
+    if [[ -n $1 ]]
+    then    
+        if [[ $1 =~ ^/sys/bus ]]
+        then            USB_IDS=$1;
+        else    USB_IDS=/sys/bus/usb/devices/$1
+        fi
+
+    else    USB_IDS=$(  find  /sys/bus/usb/devices/ -mindepth 1   -maxdepth 2 | grep -v :| grep -P '/devices/\d' | sort -V  )
+    fi
+
+    local SCSI_MAP=`mktemp`
+    #sg_map -i > $SCSI_MAP 2>/dev/null
+
+    for USB_ID in $USB_IDS
+    do
+    test -e "$USB_ID" || continue 
+        USB_ID_SHORT=$(basename $USB_ID)
+    echo -
+        {
+            echo USB_ID: $USB_ID_SHORT
+            #busnum=`cat $USB_ID/busnum`
+            #devnum=`cat $USB_ID/devnum`
+            busnum=`cat $USB_ID/uevent 2>/dev/null | grep BUSNUM| cut -d= -f2`
+            devnum=`cat $USB_ID/uevent 2>/dev/null | grep DEVNUM| cut -d= -f2`
+            echo "busnum: \"$busnum\""
+            echo "devnum: \"$devnum\""
+            echo manufacturer: `cat $USB_ID/manufacturer   2>/dev/null `
+            echo product: `cat $USB_ID/product  2>/dev/null `
+            echo vendorID_productID: `cat $USB_ID/idVendor 2>/dev/null `:`cat $USB_ID/idProduct 2>/dev/null`
+        if ls -la $USB_ID/*:*/driver 2>/dev/null | grep -q /hub
+        then :
+            echo hub: true
+        else 
+            echo hub: false
+            echo ID_VENDOR_FROM_DATABASE: `udevadm info $USB_ID 2>/dev/null | grep ID_VENDOR_FROM_DATABASE| cut -d= -f2`
+            num_ports=`cat $USB_ID/bNumInterfaces 2>/dev/null `
+            num_ports=$(($num_ports+0))
+            echo num_ports: $num_ports
+            echo ports:
+            #local N_PORTS=0
+            for PORT in `find $USB_ID/ -mindepth  1 -maxdepth  1  2>/dev/null  | grep -P ':\d' | sort -V `
+            do
+                #N_PORTS=$(( $N_PORTS + 1 ))
+                echo " -"
+                {
+                echo KERNELS: `basename $PORT  2>/dev/null`
+                echo PORT_PATH: $PORT
+                echo driver: $(test -e $PORT/driver && basename `readlink -f $PORT/driver 2>/dev/null `  2>/dev/null )
+                test -e $PORT/interface     && echo interface: $(cat $PORT/interface 2>/dev/null)
+                test -d $PORT/net/          && echo net: `basename $PORT/net/* 2>/dev/null ` 2>/dev/null
+                local T
+                local TTYS=
+                for T in $(/bin/ls -d  $PORT/tty* $PORT/tty/*   2>/dev/null  |grep -v 'tty$' )
+                do
+                    TTYS+=" "/dev/$( 2>/dev/null basename $( /bin/ls -d $T 2>/dev/null ) )
+                done
+                [ -n "$TTYS" ] && echo "tty: $TTYS"
+                
+                BLOCK_DEVS=$(find $PORT/host* 2>/dev/null | grep block/.*/size  | grep -oP '(?<=/block/).*(?=/size)' )
+                if [[ -n $BLOCK_DEVS ]]
+                then 
+                    echo "BLOCK_DEVS:"
+                    for B in $BLOCK_DEVS
+                    do
+                        #MAPPED=$( cat $SCSI_MAP | grep "/dev/$B "  | awk '{print $1}' )
+                        #B_ID=$( udevadm info /dev/$B | grep ID_SERIAL| head -n1| cut -d= -f2)
+                        #echo " $B: { SCSI_MAP: $MAPPED, ID: $B_ID  } "
+                        B_ID=$( udevadm info /dev/$B | grep ID_SERIAL| head -n1| cut -d= -f2)
+                        echo " $B: { BLOCK: $B_ID } "
+                    done
+                fi
+
+                SCSI_DEVS=$( find $PORT/ | grep ./host.*/scsi_generic/.*/device | grep -oP '(?<=/scsi_generic/).*(?=/device)' )
+                if [[ -n $SCSI_DEVS ]]
+                then
+                    echo "SCSI_DEVS:"
+                    for S in $SCSI_DEVS
+                    do
+                        S_ID=$( udevadm info /dev/$S | grep -E 'ATTRS{model}|ATTRS{vendor}' | sed 's@.*==@@;s@"@@g' | paste -s -d" " )
+                        echo " $S: { SCSI: $S_ID }"
+                    done
+                fi
+                CDC_WDM=`find $PORT/usbmisc/*  -maxdepth 0 2>/dev/null -printf '%f' ; echo`
+                if [[ -n $CDC_WDM ]]
+                then
+                    echo "CDC_WDM: /dev/$CDC_WDM"
+                fi
+                grep -q icFFisc42ip01 $PORT/modalias 2>/dev/null && echo "ADB: true"
+                # bInterfaceClass=255   bInterfaceSubClass=66   bInterfaceProtocol=1
+                } | sed "s@^@  @"
+            done
+            #echo N_ports: $N_PORTS
+        fi
+        } |  sed "s@^@  @"
+    done    
+
+#    usbtree | jq '.[]|select(.USB_ID=="/sys/bus/usb/devices/1-1.6.4.4")'
+
+    rm -f $SCSI_MAP
+}
+
+usbtree
