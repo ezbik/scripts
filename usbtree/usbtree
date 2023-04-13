@@ -3,7 +3,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # vim: filetype=bash
 
 
-usbtree() {
+_usbtree() {
 
     if [[ -n $1 ]]
     then    
@@ -106,4 +106,4 @@ usbtree() {
     rm -f $SCSI_MAP
 }
 
-usbtree
+_usbtree
