@@ -8,6 +8,8 @@
 - Designed mainly for checking statuses of 4G modems.
 
 
+also check https://github.com/tuna-f1sh/cyme
+
 ### Prereqs:
 
 find, lsusb, grep, udevadm.
