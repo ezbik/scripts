@@ -29,9 +29,7 @@ chmod 755 /usr/local/bin/usbtree
 
 Where
 
-- USB_ID is like 5-1.7.2
-
-USB_ID is optional.
+- USB_ID (optional) is like 5-1.7.2
 
 
 Full Output, when is run without options:
