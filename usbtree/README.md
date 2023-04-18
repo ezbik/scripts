@@ -2,9 +2,9 @@
 # usbtree
 
 
-### What for
+### What it is for
 
-- Returns YAML of all usb devices.
+- Returns YAML tree of all usb devices.
 - Designed mainly for checking statuses of 4G modems.
 
 
@@ -13,9 +13,15 @@ also check
 -  https://github.com/tuna-f1sh/cyme
 - https://kellyjonbrazil.github.io/jc/docs/parsers/lsusb
 
-### Prereqs:
+### How to install
 
-find, lsusb, grep, udevadm.
+**Ubuntu**
+
+```
+apt-get install --no-upgrade findutils usbutils grep udev
+curl https://raw.githubusercontent.com/ezbik/scripts/master/usbtree/usbtree -o /usr/local/bin/usbtree
+chmod 755 /usr/local/bin/usbtree
+```
 
 ### How to run
 
