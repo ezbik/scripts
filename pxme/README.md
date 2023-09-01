@@ -1,14 +1,16 @@
 # PXME
 
 It is a script to redirect all traffic of an app via a proxy.
+
 It supports TCP and UDP.
-It is compatible with http://gost.run
+
+It is compatible with https://gost.run proxies.
 
 ## Prerequisites
 
 - `unbound` binary ( with its daemon stopped )
 - `firejail` (  with `network yes` in `/etc/firejail/firejail.config` )
-- `gost` ( saved as `/usr/local/bin/gost3` binary  from gost.run )
+- `gost` ( saved as `/usr/local/bin/gost3` binary  from https://gost.run )
 
 ## Usage:
 
