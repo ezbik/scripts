@@ -2,9 +2,12 @@
 
 It is a script to redirect all traffic of an app via a proxy.
 
-It supports TCP and UDP.
+## Features:
 
-It is compatible with https://gost.run proxies.
+- It supports TCP and UDP redirecting
+- UDP is redirected only when the proxy supports it ( https://gost.run proxies do)
+- compatible with https://gost.run proxies.
+- No DNS leaks - a local recursive caching DNS server that sends DNS via the proxy.
 
 ## Prerequisites
 
