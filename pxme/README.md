@@ -1,11 +1,13 @@
 # PXME
 
-It is a script to redirect all traffic of an app via a proxy.
+It is a script that redirects all traffic from an app via a proxy.
+
+It is an alternative to **Proxycap** and **Proxifier**.
 
 ## Features:
 
-- It supports TCP and UDP redirecting
-- UDP is redirected only when the proxy supports it ( https://gost.run proxies do)
+- It supports TCP and UDP redirecting.
+- UDP is redirected only when the proxy supports it ( https://gost.run proxies do).
 - compatible with https://gost.run proxies.
 - No DNS leaks - a local recursive caching DNS server that sends DNS via the proxy.
 
