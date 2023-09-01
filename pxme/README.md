@@ -38,5 +38,8 @@ On Desktop PC:
 
 - QUIC HTTP/3 test
 
-
 ![](https://raw.githubusercontent.com/ezbik/scripts/master/pxme/results/quic.png)
+
+- browserleaks 
+
+![](https://raw.githubusercontent.com/ezbik/scripts/master/pxme/results/browserleaks.png)
