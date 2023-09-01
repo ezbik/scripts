@@ -36,3 +36,7 @@ On Desktop PC:
 
 ![](https://raw.githubusercontent.com/ezbik/scripts/master/pxme/results/twilio.png)
 
+- QUIC HTTP/3 test
+
+
+![](https://raw.githubusercontent.com/ezbik/scripts/master/pxme/results/quic.png)
