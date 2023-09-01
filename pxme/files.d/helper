@@ -1,0 +1,115 @@
+
+
+# vim: filetype=bash
+
+trap _exit  EXIT
+trap _exit INT
+
+_exit() {
+    echo = kill all processes before exit
+    sudo killall5
+}
+
+############
+
+BACKEND_PROXY="$1" 
+PROXY_HOST=$(echo "$BACKEND_PROXY" | sed 's@.*://@@; s@:.*@@g' )
+
+RED_PORT=5001
+screen -S gost_red -d -m -- gost3 -L redirect://127.0.0.1:$RED_PORT -L redu://127.0.0.1:$RED_PORT?ttl=60s -F "$BACKEND_PROXY"
+UU=$SUDO_USER
+CMD="$2" 
+
+#set|sort 
+#exit
+
+ip6tables -F
+ip6tables -A OUTPUT -j DROP
+
+iptables -w -t filter -F
+iptables -w -t filter -A OUTPUT -p udp -d 127.0.0.1/8 -j RETURN #DNS
+iptables -w -t filter -A OUTPUT -d $PROXY_HOST -j RETURN
+iptables -w -t filter -A OUTPUT -p tcp -j RETURN
+iptables -w -t filter -A OUTPUT -p udp -j RETURN
+iptables -w -t filter -A OUTPUT -j DROP 
+
+iptables -w -t nat -F
+iptables -w -t nat -A OUTPUT -d $PROXY_HOST -j RETURN
+iptables -w -t nat -A OUTPUT -d 127.0.0.1/8 -j RETURN
+iptables -w -t nat -A OUTPUT -p tcp  -j DNAT --to-destination 127.0.0.1:$RED_PORT
+
+## tcp end
+
+SL=3; echo = sleep $SL; sleep $SL
+
+echo = test TCP by IP, request https://1.1.1.1
+if curl -m5 https://1.1.1.1 -Ss 2>/dev/null | grep -q 1.1.1.1
+then echo = .. worked
+else echo = .. failed, exit
+    exit 22
+fi
+
+## udp start
+
+dec2hex () 
+{
+    printf '%x\n' $1
+}
+
+MARK=$RED_PORT
+T_NUM=100
+TPROXY_MARK=1
+MARK_HEX=0x$(dec2hex $MARK)
+
+if ip ru | grep "from all fwmark $MARK_HEX lookup $T_NUM" -q
+then    echo = already added
+else    echo = adding ROUTE1; 
+        ip ru add from all fwmark $MARK_HEX lookup $T_NUM
+fi
+
+if ip route show  tab  $T_NUM 2>/dev/null  | grep 'local default dev lo scope host' -q
+then    echo = already added
+else    echo = adding ROUTE2; 
+        ip route add local 0.0.0.0/0 dev lo table $T_NUM
+fi
+
+iptables -w -t mangle -F
+iptables -w -t mangle -A OUTPUT -p udp -d 127.0.0.1/8  -j RETURN
+iptables -w -t mangle -A OUTPUT -p udp -d 192.168.0.0/16 -j RETURN
+iptables -w -t mangle -A OUTPUT -p udp -d 172.16.0.0/12 -j RETURN
+iptables -w -t mangle -A OUTPUT -p udp -d 10.0.0.0/8 -j RETURN
+iptables -w -t mangle -A OUTPUT -p udp  -j MARK --set-mark $MARK_HEX
+iptables -w -t mangle -A PREROUTING  -m mark --mark $MARK_HEX -p udp -j TPROXY --on-port $RED_PORT --on-ip 0.0.0.0 --tproxy-mark $TPROXY_MARK
+
+echo = test UDP via proxy, query bbc.com to 1.1.1.1
+if dig +timeout=3 +short +notcp bbc.com @1.1.1.1 
+then echo = .. worked 
+else echo = .. failed, but continue anyway
+fi
+
+## udp end
+
+
+screen -S dns_recursor -d -m -- unbound -c /var/lib/unbound/unbound.min.conf -dd
+
+SL=2; echo = sleep $SL; sleep $SL
+
+echo = test DNS to local resolver, query bbc.com to 127.0.0.1
+if dig +timeout=3 +notcp +short bbc.com @127.0.0.1
+then echo = .. worked
+else echo = .. failed, exit 
+    exit 22
+fi
+
+echo = IP check, request ip.tanatos.org/ip.php
+if curl -m5 ip.tanatos.org/ip.php
+then echo = .. worked
+else echo = .. failed, exit 
+    exit 22
+fi
+
+
+echo "= run: $CMD"
+sudo -u $UU $CMD
+
+echo = EXIT

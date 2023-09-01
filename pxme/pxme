@@ -1,0 +1,34 @@
+
+
+# vim: filetype=bash
+
+
+BACKEND_PROXY=$1
+shift
+CMD="$@"
+
+_usage() {
+echo "
+Usage:
+$0 PROXY command [arg1 [arg2]]
+e.g.
+$0 socks5://User:Password@116.202.103.247:2325 google-chrome 2ip.io
+or for interactive session:
+$0 socks5://User:Password@116.202.103.247:2325 bash --norc
+"
+exit 1
+}
+
+if [[ -z $CMD ]] || [[ -z $BACKEND_PROXY ]]
+then _usage
+fi
+
+MAIN_NET_DEV=$( ip ro get 1.1.1.1| grep -oP '(?<= dev )\S+' |head -n1 )
+
+echo "= run with PROXY '$BACKEND_PROXY' CMD '$CMD'"
+echo "= detected net iface for routing $MAIN_NET_DEV"
+
+sudo cp ./files.d/unbound.min.conf /var/lib/unbound/unbound.min.conf
+sudo firejail --net=$MAIN_NET_DEV --name=PXME$RANDOM --dns=127.0.0.1 --noprofile -- bash ./files.d/helper  "$BACKEND_PROXY" "$CMD" 
+
+echo
