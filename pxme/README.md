@@ -9,6 +9,7 @@ It is an alternative to **Proxycap** and **Proxifier**.
 - It supports **TCP** and **UDP** redirecting.
 - UDP is redirected only when the proxy supports it ( https://gost.run proxies do).
 - compatible with https://gost.run proxies.
+- compatible with 3proxy proxy servers - but only TCP.
 - **No DNS leaks** - a local recursive caching DNS server is started, it sends DNS requests via the proxy.
 
 ## Prerequisites
