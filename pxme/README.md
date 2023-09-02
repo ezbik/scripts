@@ -46,3 +46,8 @@ On Desktop PC:
 - browserleaks 
 
 ![](https://raw.githubusercontent.com/ezbik/scripts/master/pxme/results/browserleaks.png)
+
+- VektorT13
+
+![](https://raw.githubusercontent.com/ezbik/scripts/master/pxme/results/vektor.png)
+
