@@ -15,13 +15,18 @@ _exit() {
 BACKEND_PROXY="$1" 
 PROXY_HOST=$(echo "$BACKEND_PROXY" |  cut -d@ -f2 |  sed 's@.*://@@; s@:.*@@g' )
 
+GOST_VER=gost3      # gost v3
+#GOST_VER=gost       # gost v2
+
 RED_PORT=5001
-screen -S gost_red -d -m -- gost3 -L redirect://127.0.0.1:$RED_PORT -L redu://127.0.0.1:$RED_PORT?ttl=60s -F "$BACKEND_PROXY"
+screen -S gost_red -d -m -- $GOST_VER -L redirect://127.0.0.1:$RED_PORT -L redu://127.0.0.1:$RED_PORT?ttl=60s -F "$BACKEND_PROXY"
 UU=$SUDO_USER
 CMD="$2" 
 
 #set|sort 
 #exit
+
+echo "= PROXY_HOST $PROXY_HOST"
 
 ip6tables -F
 ip6tables -A OUTPUT -j DROP
@@ -39,6 +44,8 @@ iptables -w -t nat -A OUTPUT -d 127.0.0.1/8 -j RETURN
 iptables -w -t nat -A OUTPUT -p tcp  -j DNAT --to-destination 127.0.0.1:$RED_PORT
 
 ## tcp end
+
+sudo bash
 
 SL=3; echo = sleep $SL; sleep $SL
 
@@ -101,15 +108,20 @@ else echo = .. failed, exit
     exit 22
 fi
 
-echo = IP check, request ip.tanatos.org/ip.php
+echo = TCP/IP + DNS check, request ip.tanatos.org/ip.php
 if curl -m5 ip.tanatos.org/ip.php
 then echo = .. worked
 else echo = .. failed, exit 
     exit 22
 fi
 
+echo = QUIC/IP check, request https://quic.tanatos.org:444/
+if curl_quic -Ss -m8 --http3-only https://quic.tanatos.org:444/ | grep 'your IP is'
+then echo = .. worked
+else echo = .. failed, continue anyway
+fi
 
-echo "= run: $CMD"
+echo "= as user $UU , run: $CMD "
 sudo -u $UU $CMD
 
 echo = EXIT
