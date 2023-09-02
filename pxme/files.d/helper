@@ -45,7 +45,7 @@ iptables -w -t nat -A OUTPUT -p tcp  -j DNAT --to-destination 127.0.0.1:$RED_POR
 
 ## tcp end
 
-sudo bash
+#sudo bash
 
 SL=3; echo = sleep $SL; sleep $SL
 
