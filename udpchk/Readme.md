@@ -22,7 +22,11 @@ python3 udpchk_name.py  --proxy  $HO --port $PO --user $UU --pwd $PP;
 
 ### udpchk_name_dnsleak.py
 
-Tests DNSleak on a proxy
+Tests DNSleak on a proxy - 
+
+1. Sends a UDP packet to a random server Hostname; 
+2. Then shows where DNS request came from
+
 
 Usage: 
 
