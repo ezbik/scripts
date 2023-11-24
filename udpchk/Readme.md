@@ -14,7 +14,7 @@ python3 udpchk.py       --proxy  $HO --port $PO --user $UU --pwd $PP;
 
 Sends a UDP packet to a server Hostname
 
-Uusage: 
+Usage: 
 
 ```
 python3 udpchk_name.py  --proxy  $HO --port $PO --user $UU --pwd $PP;
@@ -24,6 +24,7 @@ python3 udpchk_name.py  --proxy  $HO --port $PO --user $UU --pwd $PP;
 
 Tests DNSleak on a proxy
 
+Usage: 
 
 ```
 python3 udpchk_name_dnsleak.py  --proxy $HO --port $PO --user $UU --pwd $PP
