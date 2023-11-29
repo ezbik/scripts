@@ -1,6 +1,8 @@
 
 ## Socks5 Proxy UDP checking scripts
 
+Based on https://github.com/semigodking/socks5chk/tree/master
+
 ### udpchk.py
 
 Sends a UDP packet to a server IP 
