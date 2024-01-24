@@ -1,5 +1,5 @@
 
-# Fibocom L860-GL connect script
+# Fibocom L860-GL connect script (NCM, Linux)
 
 The script
 
