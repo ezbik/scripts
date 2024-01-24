@@ -1,7 +1,12 @@
 
 # Fibocom L860-GL connect script
 
-The script allows:
+The script
+
+- runs on Linux / Ubuntu.
+- handles Fibocom L860-GL in NCM mode.
+
+It allows:
 
 - getting info about the modem
 - bringing the modem online
