@@ -18,7 +18,7 @@ It allows:
 ### Install prerequisites:
 
 ```
-sudo apt -y install libdevice-gsm-perl libdevice-modem-perl python3-pip jq curl
+sudo apt -y install libdevice-gsm-perl libdevice-modem-perl python3-pip jq curl bc tofrodos
 sudo pip3 install yq
 ```
 
