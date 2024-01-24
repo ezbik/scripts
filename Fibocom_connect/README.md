@@ -17,5 +17,5 @@ Set proper APN in the script's foot (the `WAN_APN` variable)
 Detect 1st WWAN interface of the Fibocom modem. E.g. `eth2`, and bring it online:
 
 ```
-sudo Fibocom_L860_hlp.sh eth2data_on
+sudo Fibocom_L860_hlp.sh eth2 data_on
 ```
