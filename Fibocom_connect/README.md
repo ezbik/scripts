@@ -33,11 +33,10 @@ sudo systemctl disable --now ModemManager
 ### Copy the files
 
 ```
+mkdir -p /usr/local/lib/
 curl -L https://raw.githubusercontent.com/ezbik/scripts/master/Fibocom_connect/Fibocom_L860_hlp.sh -o /usr/local/bin/Fibocom_L860_hlp.sh
 curl -L https://raw.githubusercontent.com/ezbik/scripts/master/Fibocom_connect/sendat.pl -o /usr/local/bin/sendat.pl
-
-mkdir -p /usr/local/lib/
-curl -OL https://raw.githubusercontent.com/ezbik/scripts/master/list_sms.pl  -o /usr/local/lib/list_sms.pl
+curl -L https://raw.githubusercontent.com/ezbik/scripts/master/list_sms.pl  -o /usr/local/lib/list_sms.pl
 chmod 755 /usr/local/bin/Fibocom_L860_hlp.sh /usr/local/bin/sendat.pl /usr/local/lib/list_sms.pl
 ```
 
