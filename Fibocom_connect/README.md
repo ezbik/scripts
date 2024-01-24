@@ -7,6 +7,7 @@ The script allows:
 - setting 3g/4g/auto Net mode
 - resetting WAN IP
 - reading/sending SMS
+- rebooting the modem
 
 ### Install prerequisites:
 
@@ -32,3 +33,8 @@ Detect 1st WWAN interface of the Fibocom modem. E.g. `eth2`, and
 ```
 sudo Fibocom_L860_hlp.sh eth2 data_on
 ```
+
+### Other actions
+
+Run the script without parameters  for the usage manual.
+
