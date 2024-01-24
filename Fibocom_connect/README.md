@@ -16,6 +16,14 @@ sudo apt -y install libdevice-gsm-perl libdevice-modem-perl python3-pip jq
 sudo pip3 install yq
 ```
 
+Disable & stop ModemManager to avoid conflicts of what controls the hardware
+
+```
+sudo systemctl disable --now ModemManager
+```
+
+
+
 ### Copy the files
 
 ```
