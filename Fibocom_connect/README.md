@@ -3,6 +3,7 @@
 
 The script allows:
 
+- getting info about the modem
 - bringing the modem online
 - setting 3g/4g/auto Net mode
 - resetting WAN IP
