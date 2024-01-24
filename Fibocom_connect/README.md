@@ -18,7 +18,7 @@ It allows:
 ### Install prerequisites:
 
 ```
-sudo apt -y install libdevice-gsm-perl libdevice-modem-perl python3-pip jq curl bc tofrodos
+sudo apt -y install libdevice-gsm-perl libdevice-modem-perl python3-pip jq curl bc tofrodos iproute2 gammu
 sudo pip3 install yq
 ```
 
@@ -33,10 +33,12 @@ sudo systemctl disable --now ModemManager
 ### Copy the files
 
 ```
-cd /usr/local/bin/
-curl -OL https://raw.githubusercontent.com/ezbik/scripts/master/Fibocom_connect/Fibocom_L860_hlp.sh
-curl -OL https://raw.githubusercontent.com/ezbik/scripts/master/Fibocom_connect/sendat.pl
-chmod 755 Fibocom_L860_hlp.sh sendat.pl 
+curl -L https://raw.githubusercontent.com/ezbik/scripts/master/Fibocom_connect/Fibocom_L860_hlp.sh -o /usr/local/bin/Fibocom_L860_hlp.sh
+curl -L https://raw.githubusercontent.com/ezbik/scripts/master/Fibocom_connect/sendat.pl -o /usr/local/bin/sendat.pl
+
+mkdir -p /usr/local/lib/
+curl -OL https://raw.githubusercontent.com/ezbik/scripts/master/list_sms.pl  -o /usr/local/lib/list_sms.pl
+chmod 755 /usr/local/bin/Fibocom_L860_hlp.sh /usr/local/bin/sendat.pl /usr/local/lib/list_sms.pl
 ```
 
 ### Set proper APN 
