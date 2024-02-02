@@ -11,6 +11,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 APN="internet"
 ####### Conf end
 
+
 TTY_OPTS=,crnl
 SOCAT_OPTS="-T5"
 SOCAT="timeout -s 9 5 socat"
@@ -248,7 +249,7 @@ fi
 
 _data_on() {
 
-echo "=>Data On"
+echo "=> Data On"
 echo "= checking if already online.."
 if is_wan_online && is_link_up
 then echo "= already online, no need to bring DATA on"
@@ -262,26 +263,6 @@ else
 
     _dump > $O
 
-    local APN
-
-
-    if [[ -z $APN ]]
-    then
-        local CELLOP=$( cat $O | 2>/dev/null jq -r '.CELLOP //empty' )
-        echo "= got CELLOP $CELLOP"
-
-        if [[ -z $CELLOP ]]  || [[ $CELLOP == NO_SERVICE ]]
-        then
-            echo = will get APN by ICCID
-            local ICCID=$( cat $O | 2>/dev/null jq -r '.ICCID //empty' )
-            echo = got ICCID $ICCID
-            APN=$(bash /usr/share/proxysmart/helpers/apn "$ICCID" 2>/dev/null)
-        else
-            APN=$(bash /usr/share/proxysmart/helpers/apn "$CELLOP" 2>/dev/null)
-        fi
-    fi
-
-    APN=${APN:-internet}
     echo "= will use APN $APN"
     local APN_TYPE
     APN_TYPE=ip     #v4
@@ -327,7 +308,7 @@ else
         else sleep 2
         fi
     done
-    [ "$res" == OK ] || { echo '= still not OK'; return 22; }
+    [ "$res" == OK ] || { echo '= still could not get WAN_IP'; return 22; }
 fi
 
 _ifup
@@ -336,28 +317,29 @@ _ifup
 
 wait_CGATT() {
     local AT_DEV=`wwan_find_at_by_net $DEV`
-    echo "= wait till connected AT+CGATT is 1"
+    echo "= [$FUNCNAME] wait till connected AT+CGATT is 1"
     local O=`mktemp`
     local res="fail"
-    for i in `seq 8`
+    local max_attempts=8
+    for i in `seq $max_attempts`
     do
-        echo = attempt $i
+        echo = [$FUNCNAME] attempt $i/$max_attempts
         # must return 1
         echo 'AT+CGATT?' | sendat.pl $AT_DEV | fromdos > $O
         if grep  -q 'CGATT: 1' $O
-        then echo = CGATT connected
+        then echo = [$FUNCNAME] CGATT connected
             res=OK
             break
         else    sleep 2
         fi 
     done
     rm $O
-    [ "$res" == OK ] || { echo '= still not OK'; return 1; }
+    [ "$res" == OK ] || { echo "= [$FUNCNAME] still AT+CGATT not OK" ; return 1; }
 }
 
 _data_off() {
 
-echo "=>Data Off"
+echo "=> Data Off"
 ip -4 a f dev $DEV
 ip -6 a f dev $DEV
 
@@ -386,11 +368,11 @@ printf "%s\n" "${CMDS[@]}" | 2>/dev/null sendat.pl $AT_DEV | fromdos
 
 _ifup() {
 
-echo "= _IFUP"
+echo "= IFUP"
 
 I=$(mktemp)
 
-echo "= getting current status"
+echo "= [$FUNCNAME] getting current status"
 _dump > $I
 
 local WAN_GW=$( cat $I | 2>/dev/null jq -r '.WAN_GW //empty' )
@@ -414,7 +396,7 @@ then
     METRIC=$(( $(get_ifindex $DEV) + 5000 ))
     ip ro rep default via $WAN_GW  dev $DEV  metric $METRIC
 
-    ping -W2 -I$DEV -c2 1.1.1.1
+    #ping -W2 -I$DEV -c2 1.1.1.1
     #curl -Ss -m2 -4 --interface $DEV ip.tanatos.org/ip.php
 
     if [[ -n $WAN_IP6 ]] && [[ -n $WAN_NETMASK6 ]]
@@ -428,7 +410,7 @@ then
 
     #set +x
 else
-    echo "one of WAN_GW WAN_IP WAN_NETMASK WAN_DNS1 is empty, use data_on ; abort"
+    echo "= [$FUNCNAME] one of WAN_GW WAN_IP WAN_NETMASK WAN_DNS1 is empty, use data_on ; abort"
 fi
 
 }
@@ -453,7 +435,7 @@ echo "at+xact=4,2" | sendat.pl $AT_DEV
 }
 
 _reset_ip() {
-    echo "= Reset IP"
+    echo "=> Reset IP"
 
     _data_off
 
@@ -463,7 +445,20 @@ _reset_ip() {
     4g)     _mode_4g    ;;
     esac
 
-    wait_CGATT || return 22
+    local CMDS=(
+        'AT+CGDATA=M-RAW_IP,0'  # need it, so CGATT will be connected.
+        )
+
+    echo "= [$FUNCNAME] initiate DATA connect after SIM reset"
+
+    local AT_DEV=`wwan_find_at_by_net $DEV`
+    printf "%s\n" "${CMDS[@]}" | sendat.pl $AT_DEV 2>/dev/null | fromdos
+
+    if ! wait_CGATT
+    ### it may Never be OK..
+    then echo "= [$FUNCNAME] could not wait CGATT"; 
+        return 22 
+    fi
     _data_on
 }
 
