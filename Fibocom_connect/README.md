@@ -56,3 +56,8 @@ sudo Fibocom_L860_hlp.sh eth2 data_on
 
 Run the script without parameters  for the usage manual.
 
+
+## Changelog
+
+* 2024-02-02, make it possible to connect after reboot
+
