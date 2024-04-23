@@ -30,12 +30,13 @@ def test_udp(typ, addr, port, user=None, pwd=None):
     s = socks.socksocket(socket.AF_INET, socket.SOCK_DGRAM) # Same API as socket.socket in the standard lib
     try:
         rdns=True
-        h="rr"+str(randrange(50000))+"zz"+str(randrange(50000))+".dnsleaktest.tanatos.org"
+        remote_host="rr"+str(randrange(50000))+"zz"+str(randrange(50000))+".dnsleaktest.tanatos.org"
+        remote_port=53
         print(f"= sending UDP to {h}")
         s.set_proxy(socks.SOCKS5, addr, port, rdns , user, pwd) 
         # Raw DNS request
         req = b"\x12\x34\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x05\x62\x61\x69\x64\x75\x03\x63\x6f\x6d\x00\x00\x01\x00\x01"
-        s.sendto(req, (h,  53))
+        s.sendto(req, (remote_host,  remote_port))
         (rsp, address)= s.recvfrom(4096)
     except socket.error as e:
         print(repr(e))
