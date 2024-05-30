@@ -202,13 +202,13 @@ then
 
 		if dpkg --compare-versions `iptables --version | grep -oP "iptables v\K.*$" | cut -d\   -f1 ` "lt" "1.6"; then
 			echo -e "\e[31mYou need iptables 1.6.0+. Please install manually. Aborting.\e[0m" >&2
-			echo "Find latest iptables at http://www.netfilter.org/projects/iptables/downloads.html" >&2
+			echo "Find latest iptables at https://www.netfilter.org/projects/iptables/downloads.html" >&2
 			echo "Commands to install iptables 1.6.0:" >&2
                         echo "apt-get install iptables/unstable libxtables11/unstable" >&2
                         echo "... or compile from source as shown below:" >&2
 			echo -e "\e[34mapt-get install dh-autoreconf bison flex
 cd /tmp
-curl http://www.netfilter.org/projects/iptables/files/iptables-1.6.0.tar.bz2 | tar xj
+curl https://www.netfilter.org/projects/iptables/files/iptables-1.6.0.tar.bz2 | tar xj
 cd iptables-1.6.0
 ./configure --prefix=/usr      \\
             --sbindir=/sbin    \\
