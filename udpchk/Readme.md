@@ -10,7 +10,7 @@ Sends a UDP packet to a server IP  (via UDP-capable Socks5 proxy)
 Usage:
 
 ```
-python3 udpchk.py       --proxy  $HO --port $PO --user $UU --pwd $PP;
+python3 udpchk.py       --proxy  PROXYHOST --port PROXYPORT --user PROXYUSER --pwd PROXYPASSWORD
 ```
 ### udpchk_name.py
 
@@ -19,7 +19,7 @@ Sends a UDP packet to a server Hostname (via UDP-capable Socks5 proxy)
 Usage: 
 
 ```
-python3 udpchk_name.py  --proxy  $HO --port $PO --user $UU --pwd $PP;
+python3 udpchk_name.py  --proxy  PROXYHOST --port PROXYPORT --user PROXYUSER --pwd PROXYPASSWORD
 ```
 
 ### udpchk_name_dnsleak.py
@@ -33,7 +33,7 @@ Tests DNSleak on a proxy -
 Usage: 
 
 ```
-python3 udpchk_name_dnsleak.py  --proxy $HO --port $PO --user $UU --pwd $PP
+python3 udpchk_name_dnsleak.py  --proxy PROXYHOST --port PROXYPORT --user PROXYUSER --pwd PROXYPASSWORD
 ```
 
 Output:
