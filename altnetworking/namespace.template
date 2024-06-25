@@ -18,9 +18,6 @@ test_networking () {
 }
 
 post_up () {
-
-    ip ro show tab "$ip_table_name" | grep prohibit -q || ip route add  prohibit   default metric 500  tab "$ip_table_name"
-
-
+:
 }
 

@@ -255,6 +255,10 @@ iptables --version\e[0m" >&2
 			ip route flush cache
 			check_iptables=true
 		fi
+
+        # check_prohibit v4
+        ip ro show tab "$ip_table_name" | grep prohibit -q || ip route add prohibit default metric 500 tab "$ip_table_name"
+
 		if [ "`cat /proc/sys/net/ipv4/conf/all/rp_filter`" != "0" ] || [ "`cat /proc/sys/net/ipv4/conf/all/rp_filter`" != "2" ]; then
 			echo "Unset reverse path filtering for interface \"all\"" >&2
 			echo 2 | tee "/proc/sys/net/ipv4/conf/all/rp_filter" > /dev/null
